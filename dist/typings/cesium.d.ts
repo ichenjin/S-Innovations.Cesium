@@ -208,18 +208,25 @@ declare module 'cesium/Core/Color' {
 
 
 		//Methods
+		static add(left : Color, right : Color, result : Color) : Color
 		static byteToFloat(number : number) : number
 		static clone(color : Color, result? : Color) : Color
+		static divide(left : Color, right : Color, result : Color) : Color
+		static divideByScalar(color : Color, scalar : number, result : Color) : Color
 		static equals(left : Color, right : Color) : boolean
 		static floatToByte(number : number) : number
 		static fromAlpha(color : Color, alpha : number, result? : Color) : Color
 		static fromBytes(red? : number, green? : number, blue? : number, alpha? : number, result? : Color) : Color
 		static fromCartesian4(cartesian : Cartesian4, result? : Color) : Color
-		static fromCssColorString(color : string) : Color
-		static fromHsl(hue? : number, saturation? : number, lightness? : number, alpha? : number) : Color
+		static fromCssColorString(color : string, result? : Color) : Color
+		static fromHsl(hue? : number, saturation? : number, lightness? : number, alpha? : number, result? : Color) : Color
 		static fromRandom(options? : fromRandomOptions, result? : Color) : Color
-		static fromRgba(rgba : number) : Color
-		static pack(value : Color, array : Array<number>, startingIndex? : number) : void
+		static fromRgba(rgba : number, result? : Color) : Color
+		static mod(left : Color, right : Color, result : Color) : Color
+		static multiply(left : Color, right : Color, result : Color) : Color
+		static multiplyByScalar(color : Color, scalar : number, result : Color) : Color
+		static pack(value : Color, array : Array<number>, startingIndex? : number) : Array<number>
+		static subtract(left : Color, right : Color, result : Color) : Color
 		static unpack(array : Array<number>, startingIndex? : number, result? : Color) : Color
 		brighten(magnitude : number, result : Color) : Color
 		clone(result? : Color) : Color
@@ -283,15 +290,19 @@ declare module 'cesium/Core/Cartesian4' {
 		static multiplyComponents(left : Cartesian4, right : Cartesian4, result : Cartesian4) : Cartesian4
 		static negate(cartesian : Cartesian4, result : Cartesian4) : Cartesian4
 		static normalize(cartesian : Cartesian4, result : Cartesian4) : Cartesian4
-		static pack(value : Cartesian4, array : Array<number>, startingIndex? : number) : void
+		static pack(value : Cartesian4, array : Array<number>, startingIndex? : number) : Array<number>
+		static packArray(array : Array<Cartesian4>, result : Array<number>) : Array<number>
 		static subtract(left : Cartesian4, right : Cartesian4, result : Cartesian4) : Cartesian4
 		static unpack(array : Array<number>, startingIndex? : number, result? : Cartesian4) : Cartesian4
+		static unpackArray(array : Array<number>, result : Array<Cartesian4>) : Array<Cartesian4>
 
 	}
 	export = Cartesian4
 
 }
 declare module 'cesium/Core/Cartographic' {
+	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import Ellipsoid = require('cesium/Core/Ellipsoid')
 	class Cartographic 
 	{
 		constructor(longitude? : number, latitude? : number, height? : number);
@@ -306,6 +317,7 @@ declare module 'cesium/Core/Cartographic' {
 		static clone(cartographic : Cartographic, result? : Cartographic) : Cartographic
 		static equals(left? : Cartographic, right? : Cartographic) : boolean
 		static equalsEpsilon(left? : Cartographic, right? : Cartographic, epsilon? : number) : boolean
+		static fromCartesian(cartesian : Cartesian3, ellipsoid? : Ellipsoid, result? : Cartographic) : Cartographic
 		static fromDegrees(longitude : number, latitude : number, height? : number, result? : Cartographic) : Cartographic
 		static fromRadians(longitude : number, latitude : number, height? : number, result? : Cartographic) : Cartographic
 		clone(result? : Cartographic) : Cartographic
@@ -340,7 +352,7 @@ declare module 'cesium/Core/Ellipsoid' {
 		//Methods
 		static clone(ellipsoid : Ellipsoid, result? : Ellipsoid) : Ellipsoid
 		static fromCartesian3(radii? : Cartesian3) : Ellipsoid
-		static pack(value : Ellipsoid, array : Array<number>, startingIndex? : number) : void
+		static pack(value : Ellipsoid, array : Array<number>, startingIndex? : number) : Array<number>
 		static unpack(array : Array<number>, startingIndex? : number, result? : Ellipsoid) : Ellipsoid
 		cartesianArrayToCartographicArray(cartesians : Array<Cartesian3>, result? : Array<Cartographic>) : Array<Cartographic>
 		cartesianToCartographic(cartesian : Cartesian3, result? : Cartographic) : Cartographic
@@ -440,9 +452,11 @@ declare module 'cesium/Core/Cartesian3' {
 		static multiplyComponents(left : Cartesian3, right : Cartesian3, result : Cartesian3) : Cartesian3
 		static negate(cartesian : Cartesian3, result : Cartesian3) : Cartesian3
 		static normalize(cartesian : Cartesian3, result : Cartesian3) : Cartesian3
-		static pack(value : Cartesian3, array : Array<number>, startingIndex? : number) : void
+		static pack(value : Cartesian3, array : Array<number>, startingIndex? : number) : Array<number>
+		static packArray(array : Array<Cartesian3>, result : Array<number>) : Array<number>
 		static subtract(left : Cartesian3, right : Cartesian3, result : Cartesian3) : Cartesian3
 		static unpack(array : Array<number>, startingIndex? : number, result? : Cartesian3) : Cartesian3
+		static unpackArray(array : Array<number>, result : Array<Cartesian3>) : Array<Cartesian3>
 
 	}
 	export = Cartesian3
@@ -463,10 +477,136 @@ declare module 'cesium/Core/Interval' {
 	export = Interval
 
 }
+declare module 'cesium/Core/Quaternion' {
+	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import Matrix3 = require('cesium/Core/Matrix3')
+	class Quaternion 
+	{
+		constructor(x? : number, y? : number, z? : number, w? : number);
+		//Members
+		static IDENTITY: Quaternion
+		static packedInterpolationLength: number
+		static packedLength: number
+		static ZERO: Quaternion
+		w: number
+		x: number
+		y: number
+		z: number
+
+
+		//Methods
+		static add(left : Quaternion, right : Quaternion, result : Quaternion) : Quaternion
+		static clone(quaternion : Quaternion, result? : Quaternion) : Quaternion
+		static computeAngle(quaternion : Quaternion) : number
+		static computeAxis(quaternion : Quaternion, result : Cartesian3) : Cartesian3
+		static computeInnerQuadrangle(q0 : Quaternion, q1 : Quaternion, q2 : Quaternion, result : Quaternion) : Quaternion
+		static conjugate(quaternion : Quaternion, result : Quaternion) : Quaternion
+		static convertPackedArrayForInterpolation(packedArray : Array<number>, startingIndex? : number, lastIndex? : number, result? : Array<number>) : void
+		static divideByScalar(quaternion : Quaternion, scalar : number, result : Quaternion) : Quaternion
+		static dot(left : Quaternion, right : Quaternion) : number
+		static equals(left? : Quaternion, right? : Quaternion) : boolean
+		static equalsEpsilon(left? : Quaternion, right? : Quaternion, epsilon? : number) : boolean
+		static exp(cartesian : Cartesian3, result : Quaternion) : Quaternion
+		static fastSlerp(start : Quaternion, end : Quaternion, t : number, result : Quaternion) : Quaternion
+		static fastSquad(q0 : Quaternion, q1 : Quaternion, s0 : Quaternion, s1 : Quaternion, t : number, result : Quaternion) : Quaternion
+		static fromAxisAngle(axis : Cartesian3, angle : number, result? : Quaternion) : Quaternion
+		static fromHeadingPitchRoll(heading : number, pitch : number, roll : number, result? : Quaternion) : Quaternion
+		static fromRotationMatrix(matrix : Matrix3, result? : Quaternion) : Quaternion
+		static inverse(quaternion : Quaternion, result : Quaternion) : Quaternion
+		static lerp(start : Quaternion, end : Quaternion, t : number, result : Quaternion) : Quaternion
+		static log(quaternion : Quaternion, result : Cartesian3) : Cartesian3
+		static magnitude(quaternion : Quaternion) : number
+		static magnitudeSquared(quaternion : Quaternion) : number
+		static multiply(left : Quaternion, right : Quaternion, result : Quaternion) : Quaternion
+		static multiplyByScalar(quaternion : Quaternion, scalar : number, result : Quaternion) : Quaternion
+		static negate(quaternion : Quaternion, result : Quaternion) : Quaternion
+		static normalize(quaternion : Quaternion, result : Quaternion) : Quaternion
+		static pack(value : Quaternion, array : Array<number>, startingIndex? : number) : Array<number>
+		static slerp(start : Quaternion, end : Quaternion, t : number, result : Quaternion) : Quaternion
+		static squad(q0 : Quaternion, q1 : Quaternion, s0 : Quaternion, s1 : Quaternion, t : number, result : Quaternion) : Quaternion
+		static subtract(left : Quaternion, right : Quaternion, result : Quaternion) : Quaternion
+		static unpack(array : Array<number>, startingIndex? : number, result? : Quaternion) : Quaternion
+		static unpackInterpolationResult(array : Array<number>, sourceArray : Array<number>, startingIndex? : number, lastIndex? : number, result? : Quaternion) : Quaternion
+		clone(result? : Quaternion) : Quaternion
+		equals(right? : Quaternion) : boolean
+		equalsEpsilon(right? : Quaternion, epsilon? : number) : boolean
+		toString() : string
+
+	}
+	export = Quaternion
+
+}
+declare module 'cesium/Core/Matrix3' {
+	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import Quaternion = require('cesium/Core/Quaternion')
+	class Matrix3 
+	{
+		constructor(column0Row0? : number, column1Row0? : number, column2Row0? : number, column0Row1? : number, column1Row1? : number, column2Row1? : number, column0Row2? : number, column1Row2? : number, column2Row2? : number);
+		//Members
+		length: number
+		static COLUMN0ROW0: number
+		static COLUMN0ROW1: number
+		static COLUMN0ROW2: number
+		static COLUMN1ROW0: number
+		static COLUMN1ROW1: number
+		static COLUMN1ROW2: number
+		static COLUMN2ROW0: number
+		static COLUMN2ROW1: number
+		static COLUMN2ROW2: number
+		static IDENTITY: Matrix3
+		static packedLength: number
+		static ZERO: Matrix3
+
+
+		//Methods
+		clone(result? : Matrix3) : Matrix3
+		equals(right? : Matrix3) : boolean
+		equalsEpsilon(right? : Matrix3, epsilon? : number) : boolean
+		toString() : string
+		static abs(matrix : Matrix3, result : Matrix3) : Matrix3
+		static add(left : Matrix3, right : Matrix3, result : Matrix3) : Matrix3
+		static clone(matrix : Matrix3, result? : Matrix3) : Matrix3
+		static computeEigenDecomposition(matrix : Matrix3, result? : any) : Object
+		static determinant(matrix : Matrix3) : number
+		static equals(left? : Matrix3, right? : Matrix3) : boolean
+		static equalsEpsilon(left? : Matrix3, right? : Matrix3, epsilon? : number) : boolean
+		static fromArray(array : Array<number>, startingIndex? : number, result? : Matrix3) : Matrix3
+		static fromColumnMajorArray(values : Array<number>, result? : Matrix3) : Matrix3
+		static fromCrossProduct(the : Cartesian3, result? : Matrix3) : Matrix3
+		static fromQuaternion(quaternion : Quaternion, result? : Matrix3) : Matrix3
+		static fromRotationX(angle : number, result? : Matrix3) : Matrix3
+		static fromRotationY(angle : number, result? : Matrix3) : Matrix3
+		static fromRotationZ(angle : number, result? : Matrix3) : Matrix3
+		static fromRowMajorArray(values : Array<number>, result? : Matrix3) : Matrix3
+		static fromScale(scale : Cartesian3, result? : Matrix3) : Matrix3
+		static fromUniformScale(scale : number, result? : Matrix3) : Matrix3
+		static getColumn(matrix : Matrix3, index : number, result : Cartesian3) : Cartesian3
+		static getElementIndex(row : number, column : number) : number
+		static getMaximumScale(matrix : Matrix3) : number
+		static getRow(matrix : Matrix3, index : number, result : Cartesian3) : Cartesian3
+		static getScale(matrix : Matrix3, result : Cartesian3) : Cartesian3
+		static inverse(matrix : Matrix3, result : Matrix3) : Matrix3
+		static multiply(left : Matrix3, right : Matrix3, result : Matrix3) : Matrix3
+		static multiplyByScalar(matrix : Matrix3, scalar : number, result : Matrix3) : Matrix3
+		static multiplyByScale(matrix : Matrix3, scale : Cartesian3, result : Matrix3) : Matrix3
+		static multiplyByVector(matrix : Matrix3, cartesian : Cartesian3, result : Cartesian3) : Cartesian3
+		static negate(matrix : Matrix3, result : Matrix3) : Matrix3
+		static pack(value : Matrix3, array : Array<number>, startingIndex? : number) : Array<number>
+		static setColumn(matrix : Matrix3, index : number, cartesian : Cartesian3, result : Matrix3) : Matrix3
+		static setRow(matrix : Matrix3, index : number, cartesian : Cartesian3, result : Matrix3) : Matrix3
+		static subtract(left : Matrix3, right : Matrix3, result : Matrix3) : Matrix3
+		static toArray(matrix : Matrix3, result? : Array<number>) : Array<number>
+		static transpose(matrix : Matrix3, result : Matrix3) : Matrix3
+		static unpack(array : Array<number>, startingIndex? : number, result? : Matrix3) : Matrix3
+
+	}
+	export = Matrix3
+
+}
 declare module 'cesium/Core/Rectangle' {
 	import Cartographic = require('cesium/Core/Cartographic')
-	import Cartesian3 = require('cesium/Core/Cartesian3')
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
+	import Cartesian3 = require('cesium/Core/Cartesian3')
 	class Rectangle 
 	{
 		constructor(west? : number, south? : number, east? : number, north? : number);
@@ -488,15 +628,18 @@ declare module 'cesium/Core/Rectangle' {
 		static computeWidth(rectangle : Rectangle) : number
 		static contains(rectangle : Rectangle, cartographic : Cartographic) : boolean
 		static equals(left? : Rectangle, right? : Rectangle) : boolean
+		static expand(rectangle : Rectangle, cartographic : Cartographic, result? : Rectangle) : Rectangle
+		static fromCartesianArray(cartesians : Array<Cartesian>, ellipsoid? : Ellipsoid, result? : Rectangle) : Rectangle
 		static fromCartographicArray(cartographics : Array<Cartographic>, result? : Rectangle) : Rectangle
 		static fromDegrees(west? : number, south? : number, east? : number, north? : number, result? : Rectangle) : Rectangle
 		static intersection(rectangle : Rectangle, otherRectangle : Rectangle, result? : Rectangle) : Rectangle|void
 		static northeast(rectangle : Rectangle, result? : Cartographic) : Cartographic
 		static northwest(rectangle : Rectangle, result? : Cartographic) : Cartographic
-		static pack(value : Rectangle, array : Array<number>, startingIndex? : number) : void
+		static pack(value : Rectangle, array : Array<number>, startingIndex? : number) : Array<number>
 		static southeast(rectangle : Rectangle, result? : Cartographic) : Cartographic
 		static southwest(rectangle : Rectangle, result? : Cartographic) : Cartographic
 		static subsample(rectangle : Rectangle, ellipsoid? : Ellipsoid, surfaceHeight? : number, result? : Array<Cartesian3>) : Array<Cartesian3>
+		static union(rectangle : Rectangle, otherRectangle : Rectangle, result? : Rectangle) : Rectangle
 		static unpack(array : Array<number>, startingIndex? : number, result? : Rectangle) : Rectangle
 		static validate(rectangle : Rectangle) : void
 		clone(result? : Rectangle) : Rectangle
@@ -572,6 +715,43 @@ declare module 'cesium/Core/Occluder' {
 	export = Occluder
 
 }
+declare module 'cesium/Core/OrientedBoundingBox' {
+	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import Matrix3 = require('cesium/Core/Matrix3')
+	import Interval = require('cesium/Core/Interval')
+	import Rectangle = require('cesium/Core/Rectangle')
+	import Ellipsoid = require('cesium/Core/Ellipsoid')
+	import Intersect = require('cesium/Core/Intersect')
+	import Plane = require('cesium/Core/Plane')
+	import Occluder = require('cesium/Core/Occluder')
+	class OrientedBoundingBox 
+	{
+		constructor(center? : Cartesian3, halfAxes? : Matrix3);
+		//Members
+		center: Cartesian3
+		halfAxes: Matrix3
+
+
+		//Methods
+		static clone(box : OrientedBoundingBox, result? : OrientedBoundingBox) : OrientedBoundingBox
+		static computePlaneDistances(box : OrientedBoundingBox, position : Cartesian3, direction : Cartesian3, result? : Interval) : Interval
+		static distanceSquaredTo(box : OrientedBoundingBox, cartesian : Cartesian3) : number
+		static equals(left : OrientedBoundingBox, right : OrientedBoundingBox) : boolean
+		static fromPoints(positions : Array<Cartesian3>, result? : OrientedBoundingBox) : OrientedBoundingBox
+		static fromRectangle(rectangle : Rectangle, minimumHeight? : number, maximumHeight? : number, ellipsoid? : Ellipsoid, result? : OrientedBoundingBox) : OrientedBoundingBox
+		static intersectPlane(box : OrientedBoundingBox, plane : Plane) : Intersect
+		static isOccluded(box : OrientedBoundingBox, occluder : Occluder) : boolean
+		clone(result? : OrientedBoundingBox) : OrientedBoundingBox
+		computePlaneDistances(position : Cartesian3, direction : Cartesian3, result? : Interval) : Interval
+		distanceSquaredTo(cartesian : Cartesian3) : number
+		equals(right? : OrientedBoundingBox) : boolean
+		intersectPlane(plane : Plane) : Intersect
+		isOccluded(occluder : Occluder) : boolean
+
+	}
+	export = OrientedBoundingBox
+
+}
 declare module 'cesium/Core/MapProjection' {
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
 	import Cartesian3 = require('cesium/Core/Cartesian3')
@@ -591,8 +771,24 @@ declare module 'cesium/Core/MapProjection' {
 	export = MapProjection
 
 }
+declare module 'cesium/Scene/MapMode2D' {
+	class MapMode2D 
+	{
+		constructor();
+		//Members
+		static INFINITE_SCROLL: number
+		static ROTATE: number
+
+
+		//Methods
+
+	}
+	export = MapMode2D
+
+}
 declare module 'cesium/Scene/SceneOptions' {
 	import MapProjection = require('cesium/Core/MapProjection')
+	import MapMode2D = require('cesium/Scene/MapMode2D')
 	interface SceneOptions
 	{
 		canvas: HTMLCanvasElement;
@@ -601,8 +797,27 @@ declare module 'cesium/Scene/SceneOptions' {
 		mapProjection?: MapProjection;
 		orderIndependentTranslucency?: boolean;
 		scene3DOnly?: boolean;
+		terrainExaggeration?: number;
+		shadows?: boolean;
+		mapMode2D?: MapMode2D;
 	}
 	export = SceneOptions
+
+}
+declare module 'cesium/Scene/Fog' {
+	class Fog 
+	{
+		constructor();
+		//Members
+		density: number
+		enabled: boolean
+		screenSpaceErrorFactor: number
+
+
+		//Methods
+
+	}
+	export = Fog
 
 }
 declare module 'cesium/Core/Event' {
@@ -717,9 +932,11 @@ declare module 'cesium/Core/Cartesian2' {
 		static multiplyComponents(left : Cartesian2, right : Cartesian2, result : Cartesian2) : Cartesian2
 		static negate(cartesian : Cartesian2, result : Cartesian2) : Cartesian2
 		static normalize(cartesian : Cartesian2, result : Cartesian2) : Cartesian2
-		static pack(value : Cartesian2, array : Array<number>, startingIndex? : number) : void
+		static pack(value : Cartesian2, array : Array<number>, startingIndex? : number) : Array<number>
+		static packArray(array : Array<Cartesian2>, result : Array<number>) : Array<number>
 		static subtract(left : Cartesian2, right : Cartesian2, result : Cartesian2) : Cartesian2
 		static unpack(array : Array<number>, startingIndex? : number, result? : Cartesian2) : Cartesian2
+		static unpackArray(array : Array<number>, result : Array<Cartesian2>) : Array<Cartesian2>
 
 	}
 	export = Cartesian2
@@ -760,6 +977,7 @@ declare module 'cesium/Scene/ImageryLayerFeatureInfo' {
 		//Members
 		data: Object
 		description: string
+		imageryLayer: Object
 		name: string
 		position: Cartographic
 
@@ -776,10 +994,10 @@ declare module 'cesium/Scene/ImageryProvider' {
 	import Credit = require('cesium/Core/Credit')
 	import Event = require('cesium/Core/Event')
 	import DefaultProxy = require('cesium/Core/DefaultProxy')
+	import Promise = require('cesium/Promise')
 	import Rectangle = require('cesium/Core/Rectangle')
 	import TileDiscardPolicy = require('cesium/Scene/TileDiscardPolicy')
 	import TilingScheme = require('cesium/Core/TilingScheme')
-	import Promise = require('cesium/Promise')
 	import ImageryLayerFeatureInfo = require('cesium/Scene/ImageryLayerFeatureInfo')
 	class ImageryProvider 
 	{
@@ -798,6 +1016,7 @@ declare module 'cesium/Scene/ImageryProvider' {
 		minimumLevel: number
 		proxy: DefaultProxy
 		ready: boolean
+		readyPromise: Promise<boolean>
 		rectangle: Rectangle
 		tileDiscardPolicy: TileDiscardPolicy
 		tileHeight: number
@@ -838,6 +1057,7 @@ declare module 'cesium/Scene/ImageryLayer' {
 	import ImageryProvider = require('cesium/Scene/ImageryProvider')
 	import ImageryLayerOptions = require('cesium/Scene/ImageryLayerOptions')
 	import Rectangle = require('cesium/Core/Rectangle')
+	import Promise = require('cesium/Promise')
 	class ImageryLayer 
 	{
 		constructor(imageryProvider : ImageryProvider, options? : ImageryLayerOptions);
@@ -860,6 +1080,7 @@ declare module 'cesium/Scene/ImageryLayer' {
 
 		//Methods
 		destroy() : void
+		getViewableRectangle() : Promise<Rectangle>
 		isBaseLayer() : boolean
 		isDestroyed() : boolean
 
@@ -908,7 +1129,7 @@ declare module 'cesium/Scene/ImageryLayerCollection' {
 		addImageryProvider(imageryProvider : ImageryProvider, index? : number) : ImageryLayer
 		contains(layer : ImageryLayer) : boolean
 		destroy() : void
-		get(index : number) : void
+		get(index : number) : ImageryLayer
 		indexOf(layer : ImageryLayer) : number
 		isDestroyed() : boolean
 		lower(layer : ImageryLayer) : void
@@ -923,198 +1144,27 @@ declare module 'cesium/Scene/ImageryLayerCollection' {
 	export = ImageryLayerCollection
 
 }
-declare module 'cesium/Core/Quaternion' {
-	import Cartesian3 = require('cesium/Core/Cartesian3')
-	import Matrix3 = require('cesium/Core/Matrix3')
-	class Quaternion 
+declare module 'cesium/Scene/ShadowMode' {
+	class ShadowMode 
 	{
-		constructor(x? : number, y? : number, z? : number, w? : number);
+		constructor();
 		//Members
-		static IDENTITY: Quaternion
-		static packedInterpolationLength: number
-		static packedLength: number
-		static ZERO: Quaternion
-		w: number
-		x: number
-		y: number
-		z: number
-
-
-		//Methods
-		static add(left : Quaternion, right : Quaternion, result : Quaternion) : Quaternion
-		static clone(quaternion : Quaternion, result? : Quaternion) : Quaternion
-		static computeAngle(quaternion : Quaternion) : number
-		static computeAxis(quaternion : Quaternion, result : Cartesian3) : Cartesian3
-		static computeInnerQuadrangle(q0 : Quaternion, q1 : Quaternion, q2 : Quaternion, result : Quaternion) : Quaternion
-		static conjugate(quaternion : Quaternion, result : Quaternion) : Quaternion
-		static convertPackedArrayForInterpolation(packedArray : Array<number>, startingIndex? : number, lastIndex? : number, result? : Array<number>) : void
-		static divideByScalar(quaternion : Quaternion, scalar : number, result : Quaternion) : Quaternion
-		static dot(left : Quaternion, right : Quaternion) : number
-		static equals(left? : Quaternion, right? : Quaternion) : boolean
-		static equalsEpsilon(left? : Quaternion, right? : Quaternion, epsilon? : number) : boolean
-		static exp(cartesian : Cartesian3, result : Quaternion) : Quaternion
-		static fastSlerp(start : Quaternion, end : Quaternion, t : number, result : Quaternion) : Quaternion
-		static fastSquad(q0 : Quaternion, q1 : Quaternion, s0 : Quaternion, s1 : Quaternion, t : number, result : Quaternion) : Quaternion
-		static fromAxisAngle(axis : Cartesian3, angle : number, result? : Quaternion) : Quaternion
-		static fromHeadingPitchRoll(heading : number, pitch : number, roll : number, result? : Quaternion) : Quaternion
-		static fromRotationMatrix(matrix : Matrix3, result? : Quaternion) : Quaternion
-		static inverse(quaternion : Quaternion, result : Quaternion) : Quaternion
-		static lerp(start : Quaternion, end : Quaternion, t : number, result : Quaternion) : Quaternion
-		static log(quaternion : Quaternion, result : Cartesian3) : Cartesian3
-		static magnitude(quaternion : Quaternion) : number
-		static magnitudeSquared(quaternion : Quaternion) : number
-		static multiply(left : Quaternion, right : Quaternion, result : Quaternion) : Quaternion
-		static multiplyByScalar(quaternion : Quaternion, scalar : number, result : Quaternion) : Quaternion
-		static negate(quaternion : Quaternion, result : Quaternion) : Quaternion
-		static normalize(quaternion : Quaternion, result : Quaternion) : Quaternion
-		static pack(value : Quaternion, array : Array<number>, startingIndex? : number) : void
-		static slerp(start : Quaternion, end : Quaternion, t : number, result : Quaternion) : Quaternion
-		static squad(q0 : Quaternion, q1 : Quaternion, s0 : Quaternion, s1 : Quaternion, t : number, result : Quaternion) : Quaternion
-		static subtract(left : Quaternion, right : Quaternion, result : Quaternion) : Quaternion
-		static unpack(array : Array<number>, startingIndex? : number, result? : Quaternion) : Quaternion
-		static unpackInterpolationResult(array : Array<number>, sourceArray : Array<number>, startingIndex? : number, lastIndex? : number, result? : Quaternion) : Quaternion
-		clone(result? : Quaternion) : Quaternion
-		equals(right? : Quaternion) : boolean
-		equalsEpsilon(right? : Quaternion, epsilon? : number) : boolean
-		toString() : string
-
-	}
-	export = Quaternion
-
-}
-declare module 'cesium/Core/Matrix3' {
-	import Cartesian3 = require('cesium/Core/Cartesian3')
-	import Quaternion = require('cesium/Core/Quaternion')
-	class Matrix3 
-	{
-		constructor(column0Row0? : number, column1Row0? : number, column2Row0? : number, column0Row1? : number, column1Row1? : number, column2Row1? : number, column0Row2? : number, column1Row2? : number, column2Row2? : number);
-		//Members
-		static COLUMN0ROW0: number
-		static COLUMN0ROW1: number
-		static COLUMN0ROW2: number
-		static COLUMN1ROW0: number
-		static COLUMN1ROW1: number
-		static COLUMN1ROW2: number
-		static COLUMN2ROW0: number
-		static COLUMN2ROW1: number
-		static COLUMN2ROW2: number
-		static IDENTITY: Matrix3
-		static packedLength: number
-		static ZERO: Matrix3
-
-
-		//Methods
-		clone(result? : Matrix3) : Matrix3
-		equals(right? : Matrix3) : boolean
-		equalsEpsilon(right? : Matrix3, epsilon? : number) : boolean
-		toString() : string
-		static abs(matrix : Matrix3, result : Matrix3) : Matrix3
-		static add(left : Matrix3, right : Matrix3, result : Matrix3) : Matrix3
-		static clone(matrix : Matrix3, result? : Matrix3) : Matrix3
-		static computeEigenDecomposition(matrix : Matrix3, result? : any) : Object
-		static determinant(matrix : Matrix3) : number
-		static equals(left? : Matrix3, right? : Matrix3) : boolean
-		static equalsEpsilon(left? : Matrix3, right? : Matrix3, epsilon? : number) : boolean
-		static fromArray(array : Array<number>, startingIndex? : number, result? : Matrix3) : Matrix3
-		static fromColumnMajorArray(values : Array<number>, result? : Matrix3) : Matrix3
-		static fromCrossProduct(the : Cartesian3, result? : Matrix3) : Matrix3
-		static fromQuaternion(quaternion : Quaternion, result? : Matrix3) : Matrix3
-		static fromRotationX(angle : number, result? : Matrix3) : Matrix3
-		static fromRotationY(angle : number, result? : Matrix3) : Matrix3
-		static fromRotationZ(angle : number, result? : Matrix3) : Matrix3
-		static fromRowMajorArray(values : Array<number>, result? : Matrix3) : Matrix3
-		static fromScale(scale : Cartesian3, result? : Matrix3) : Matrix3
-		static fromUniformScale(scale : number, result? : Matrix3) : Matrix3
-		static getColumn(matrix : Matrix3, index : number, result : Cartesian3) : Cartesian3
-		static getElementIndex(row : number, column : number) : number
-		static getMaximumScale(matrix : Matrix3) : number
-		static getRow(matrix : Matrix3, index : number, result : Cartesian3) : Cartesian3
-		static getScale(matrix : Matrix3, result : Cartesian3) : Cartesian3
-		static inverse(matrix : Matrix3, result : Matrix3) : Matrix3
-		static multiply(left : Matrix3, right : Matrix3, result : Matrix3) : Matrix3
-		static multiplyByScalar(matrix : Matrix3, scalar : number, result : Matrix3) : Matrix3
-		static multiplyByScale(matrix : Matrix3, scale : Cartesian3, result : Matrix3) : Matrix3
-		static multiplyByVector(matrix : Matrix3, cartesian : Cartesian3, result : Cartesian3) : Cartesian3
-		static negate(matrix : Matrix3, result : Matrix3) : Matrix3
-		static pack(value : Matrix3, array : Array<number>, startingIndex? : number) : void
-		static setColumn(matrix : Matrix3, index : number, cartesian : Cartesian3, result : Matrix3) : Matrix3
-		static setRow(matrix : Matrix3, index : number, cartesian : Cartesian3, result : Matrix3) : Matrix3
-		static subtract(left : Matrix3, right : Matrix3, result : Matrix3) : Matrix3
-		static toArray(matrix : Matrix3, result? : Array<number>) : Array<number>
-		static transpose(matrix : Matrix3, result : Matrix3) : Matrix3
-		static unpack(array : Array<number>, startingIndex? : number, result? : Matrix3) : Matrix3
-
-	}
-	export = Matrix3
-
-}
-declare module 'cesium/Core/OrientedBoundingBox' {
-	import Cartesian3 = require('cesium/Core/Cartesian3')
-	import Matrix3 = require('cesium/Core/Matrix3')
-	import Interval = require('cesium/Core/Interval')
-	import Rectangle = require('cesium/Core/Rectangle')
-	import Ellipsoid = require('cesium/Core/Ellipsoid')
-	import Intersect = require('cesium/Core/Intersect')
-	import Plane = require('cesium/Core/Plane')
-	import Occluder = require('cesium/Core/Occluder')
-	class OrientedBoundingBox 
-	{
-		constructor(center? : Cartesian3, halfAxes? : Matrix3);
-		//Members
-		center: Cartesian3
-		halfAxes: Matrix3
-
-
-		//Methods
-		static clone(box : OrientedBoundingBox, result? : OrientedBoundingBox) : OrientedBoundingBox
-		static computePlaneDistances(box : OrientedBoundingBox, position : Cartesian3, direction : Cartesian3, result? : Interval) : Interval
-		static distanceSquaredTo(box : OrientedBoundingBox, cartesian : Cartesian3) : number
-		static equals(left : OrientedBoundingBox, right : OrientedBoundingBox) : boolean
-		static fromPoints(positions : Array<Cartesian3>, result? : OrientedBoundingBox) : OrientedBoundingBox
-		static fromRectangle(rectangle : Rectangle, minimumHeight? : number, maximumHeight? : number, ellipsoid? : Ellipsoid, result? : OrientedBoundingBox) : OrientedBoundingBox
-		static intersectPlane(box : OrientedBoundingBox, plane : Plane) : Intersect
-		static isOccluded(sphere : OrientedBoundingBox, occluder : Occluder) : boolean
-		clone(result? : OrientedBoundingBox) : OrientedBoundingBox
-		computePlaneDistances(position : Cartesian3, direction : Cartesian3, result? : Interval) : Interval
-		distanceSquaredTo(cartesian : Cartesian3) : number
-		equals(right? : OrientedBoundingBox) : boolean
-		intersectPlane(plane : Plane) : Intersect
-		isOccluded(occluder : Occluder) : boolean
-
-	}
-	export = OrientedBoundingBox
-
-}
-declare module 'cesium/Core/TerrainMesh' {
-	import Cartesian3 = require('cesium/Core/Cartesian3')
-	import BoundingSphere = require('cesium/Core/BoundingSphere')
-	import OrientedBoundingBox = require('cesium/Core/OrientedBoundingBox')
-	class TerrainMesh 
-	{
-		constructor(center : Cartesian3, vertices : Float32Array, indices : Uint16Array|Uint32Array, minimumHeight : number, maximumHeight : number, boundingSphere3D : BoundingSphere, occludeePointInScaledSpace : Cartesian3, vertexStride? : number, orientedBoundingBox? : OrientedBoundingBox);
-		//Members
-		boundingSphere3D: BoundingSphere
-		center: Cartesian3
-		indices: Uint16Array|Uint32Array
-		maximumHeight: number
-		minimumHeight: number
-		occludeePointInScaledSpace: Cartesian3
-		orientedBoundingBox: OrientedBoundingBox
-		stride: number
-		vertices: Float32Array
+		static CAST_ONLY: number
+		static DISABLED: number
+		static ENABLED: number
+		static RECEIVE_ONLY: number
 
 
 		//Methods
 
 	}
-	export = TerrainMesh
+	export = ShadowMode
 
 }
 declare module 'cesium/Core/TerrainData' {
-	import TerrainMesh = require('cesium/Core/TerrainMesh')
+	import Rectangle = require('cesium/Core/Rectangle')
 	import Promise = require('cesium/Promise')
 	import TilingScheme = require('cesium/Core/TilingScheme')
-	import Rectangle = require('cesium/Core/Rectangle')
 	class TerrainData 
 	{
 		constructor();
@@ -1123,7 +1173,6 @@ declare module 'cesium/Core/TerrainData' {
 
 
 		//Methods
-		createMesh(tilingScheme : TilingScheme, x : number, y : number, level : number) : Promise<TerrainMesh>|void
 		interpolateHeight(rectangle : Rectangle, longitude : number, latitude : number) : number
 		isChildAvailable(thisX : number, thisY : number, childX : number, childY : number) : boolean
 		upsample(tilingScheme : TilingScheme, thisX : number, thisY : number, thisLevel : number, descendantX : number, descendantY : number, descendantLevel : number) : Promise<TerrainData>|void
@@ -1136,10 +1185,10 @@ declare module 'cesium/Core/TerrainData' {
 declare module 'cesium/Core/TerrainProvider' {
 	import Credit = require('cesium/Core/Credit')
 	import Event = require('cesium/Core/Event')
+	import Promise = require('cesium/Promise')
 	import TilingScheme = require('cesium/Core/TilingScheme')
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
 	import TerrainData = require('cesium/Core/TerrainData')
-	import Promise = require('cesium/Promise')
 	class TerrainProvider 
 	{
 		constructor();
@@ -1150,6 +1199,7 @@ declare module 'cesium/Core/TerrainProvider' {
 		hasVertexNormals: boolean
 		hasWaterMask: boolean
 		ready: boolean
+		readyPromise: Promise<boolean>
 		tilingScheme: TilingScheme
 
 
@@ -1168,9 +1218,11 @@ declare module 'cesium/Scene/Globe' {
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
 	import Color = require('cesium/Core/Color')
 	import ImageryLayerCollection = require('cesium/Scene/ImageryLayerCollection')
-	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
 	import TerrainProvider = require('cesium/Core/TerrainProvider')
+	import Event = require('cesium/Core/Event')
 	import Cartographic = require('cesium/Core/Cartographic')
+	import Cartesian3 = require('cesium/Core/Cartesian3')
 	import Ray = require('cesium/Core/Ray')
 	import Scene = require('cesium/Scene/Scene')
 	class Globe 
@@ -1185,13 +1237,14 @@ declare module 'cesium/Scene/Globe' {
 		lightingFadeInDistance: number
 		lightingFadeOutDistance: number
 		maximumScreenSpaceError: number
-		northPoleColor: Cartesian3
 		oceanNormalMapUrl: string
+		shadows: ShadowMode
 		show: boolean
 		showWaterEffect: boolean
-		southPoleColor: Cartesian3
 		terrainProvider: TerrainProvider
+		terrainProviderChanged: Event
 		tileCacheSize: number
+		tileLoadProgressEvent: Event
 
 
 		//Methods
@@ -1349,13 +1402,54 @@ declare module 'cesium/Scene/ScreenSpaceCameraController' {
 	export = ScreenSpaceCameraController
 
 }
+declare module 'cesium/Scene/ShadowMapOptions' {
+	import Camera = require('cesium/Scene/Camera')
+	interface ShadowMapOptions
+	{
+		context: any;
+		lightCamera: Camera;
+		enabled?: boolean;
+		isPointLight?: boolean;
+		pointLightRadius?: boolean;
+		cascadesEnabled?: boolean;
+		numberOfCascades?: number;
+		maximumDistance?: number;
+		size?: number;
+		softShadows?: boolean;
+		darkness?: number;
+	}
+	export = ShadowMapOptions
+
+}
+declare module 'cesium/Scene/ShadowMap' {
+	import ShadowMapOptions = require('cesium/Scene/ShadowMapOptions')
+	class ShadowMap 
+	{
+		constructor(options? : ShadowMapOptions);
+		//Members
+		darkness: number
+		enabled: boolean
+		maximumDistance: number
+		size: number
+		softShadows: boolean
+
+
+		//Methods
+
+	}
+	export = ShadowMap
+
+}
 declare module 'cesium/Scene/SkyAtmosphere' {
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
 	class SkyAtmosphere 
 	{
 		constructor(ellipsoid? : Ellipsoid);
 		//Members
+		brightnessShift: number
 		ellipsoid: Ellipsoid
+		hueShift: number
+		saturationShift: number
 		show: boolean
 
 
@@ -1416,6 +1510,7 @@ declare module 'cesium/Scene/Scene' {
 	import SceneOptions = require('cesium/Scene/SceneOptions')
 	import Color = require('cesium/Core/Color')
 	import Camera = require('cesium/Scene/Camera')
+	import Fog = require('cesium/Scene/Fog')
 	import Globe = require('cesium/Scene/Globe')
 	import PrimitiveCollection = require('cesium/Scene/PrimitiveCollection')
 	import ImageryLayerCollection = require('cesium/Scene/ImageryLayerCollection')
@@ -1424,6 +1519,7 @@ declare module 'cesium/Scene/Scene' {
 	import Moon = require('cesium/Scene/Moon')
 	import Event = require('cesium/Core/Event')
 	import ScreenSpaceCameraController = require('cesium/Scene/ScreenSpaceCameraController')
+	import ShadowMap = require('cesium/Scene/ShadowMap')
 	import SkyAtmosphere = require('cesium/Scene/SkyAtmosphere')
 	import SkyBox = require('cesium/Scene/SkyBox')
 	import Sun = require('cesium/Scene/Sun')
@@ -1448,11 +1544,13 @@ declare module 'cesium/Scene/Scene' {
 		drawingBufferHeight: number
 		drawingBufferWidth: number
 		farToNearRatio: number
+		fog: Fog
 		fxaa: boolean
 		globe: Globe
 		groundPrimitives: PrimitiveCollection
 		id: string
 		imageryLayers: ImageryLayerCollection
+		mapMode2D: boolean
 		mapProjection: MapProjection
 		maximumAliasedLineWidth: number
 		maximumCubeMapSize: number
@@ -1461,7 +1559,9 @@ declare module 'cesium/Scene/Scene' {
 		morphComplete: Event
 		morphStart: Event
 		morphTime: number
+		nearToFarDistance2D: number
 		orderIndependentTranslucency: boolean
+		pickPositionSupported: boolean
 		postRender: Event
 		preRender: Event
 		primitives: PrimitiveCollection
@@ -1469,11 +1569,16 @@ declare module 'cesium/Scene/Scene' {
 		rethrowRenderErrors: boolean
 		scene3DOnly: boolean
 		screenSpaceCameraController: ScreenSpaceCameraController
+		shadowMap: ShadowMap
 		skyAtmosphere: SkyAtmosphere
 		skyBox: SkyBox
 		sun: Sun
 		sunBloom: boolean
+		terrainExaggeration: number
 		terrainProvider: TerrainProvider
+		terrainProviderChanged: Event
+		useDepthPicking: boolean
+		useWebVR: boolean
 
 
 		//Methods
@@ -1493,15 +1598,17 @@ declare module 'cesium/Scene/Scene' {
 }
 declare module 'cesium/Scene/CullingVolume' {
 	import Cartesian4 = require('cesium/Core/Cartesian4')
+	import BoundingSphere = require('cesium/Core/BoundingSphere')
 	import Intersect = require('cesium/Core/Intersect')
 	class CullingVolume 
 	{
-		constructor(planes : Array<Cartesian4>);
+		constructor(planes? : Array<Cartesian4>);
 		//Members
 		planes: Array<Cartesian4>
 
 
 		//Methods
+		static fromBoundingSphere(boundingSphere : BoundingSphere, result? : CullingVolume) : CullingVolume
 		computeVisibility(boundingVolume : any) : Intersect
 
 	}
@@ -1524,13 +1631,15 @@ declare module 'cesium/Scene/PerspectiveFrustum' {
 		infiniteProjectionMatrix: Matrix4
 		near: number
 		projectionMatrix: Matrix4
+		xOffset: number
+		yOffset: number
 
 
 		//Methods
 		clone(result? : PerspectiveFrustum) : PerspectiveFrustum
 		computeCullingVolume(position : Cartesian3, direction : Cartesian3, up : Cartesian3) : CullingVolume
 		equals(other? : PerspectiveFrustum) : boolean
-		getPixelSize(drawingBufferDimensions : Cartesian2, distance? : number, result? : Cartesian2) : Cartesian2
+		getPixelDimensions(drawingBufferWidth : number, drawingBufferHeight : number, distance : number, result : Cartesian2) : Cartesian2
 
 	}
 	export = PerspectiveFrustum
@@ -1593,14 +1702,13 @@ declare module 'cesium/Scene/flyToOptions' {
 		complete?: any;
 		cancel?: any;
 		endTransform?: Matrix4;
-		convert?: boolean;
 		maximumHeight?: number;
 		easingFunction?: EasingFunction|any;
 	}
 	export = flyToOptions
 
 }
-declare module 'cesium/Scene/HeadingPitchRange' {
+declare module 'cesium/Core/HeadingPitchRange' {
 	class HeadingPitchRange 
 	{
 		constructor(heading? : number, pitch? : number, range? : number);
@@ -1618,7 +1726,7 @@ declare module 'cesium/Scene/HeadingPitchRange' {
 
 }
 declare module 'cesium/Scene/flyToBoundingSphereOptions' {
-	import HeadingPitchRange = require('cesium/Scene/HeadingPitchRange')
+	import HeadingPitchRange = require('cesium/Core/HeadingPitchRange')
 	import Matrix4 = require('cesium/Core/Matrix4')
 	import EasingFunction = require('cesium/Core/EasingFunction')
 	interface flyToBoundingSphereOptions
@@ -1636,14 +1744,13 @@ declare module 'cesium/Scene/flyToBoundingSphereOptions' {
 }
 declare module 'cesium/Scene/setViewOptions' {
 	import Cartesian3 = require('cesium/Core/Cartesian3')
-	import Cartographic = require('cesium/Core/Cartographic')
+	import Rectangle = require('cesium/Core/Rectangle')
+	import Matrix4 = require('cesium/Core/Matrix4')
 	interface setViewOptions
 	{
-		position?: Cartesian3;
-		positionCartographic?: Cartographic;
-		heading?: number;
-		pitch?: number;
-		roll?: number;
+		destination?: Cartesian3|Rectangle;
+		orientation?: Object;
+		endTransform?: Matrix4;
 	}
 	export = setViewOptions
 
@@ -1651,19 +1758,19 @@ declare module 'cesium/Scene/setViewOptions' {
 declare module 'cesium/Scene/Camera' {
 	import Scene = require('cesium/Scene/Scene')
 	import Rectangle = require('cesium/Core/Rectangle')
+	import Event = require('cesium/Core/Event')
 	import Cartesian3 = require('cesium/Core/Cartesian3')
 	import PerspectiveFrustum = require('cesium/Scene/PerspectiveFrustum')
 	import Matrix4 = require('cesium/Core/Matrix4')
-	import Event = require('cesium/Core/Event')
 	import Cartographic = require('cesium/Core/Cartographic')
 	import Cartesian4 = require('cesium/Core/Cartesian4')
-	import flyToOptions = require('cesium/Scene/flyToOptions')
+	import Ellipsoid = require('cesium/Core/Ellipsoid')
 	import BoundingSphere = require('cesium/Core/BoundingSphere')
+	import flyToOptions = require('cesium/Scene/flyToOptions')
 	import flyToBoundingSphereOptions = require('cesium/Scene/flyToBoundingSphereOptions')
 	import Ray = require('cesium/Core/Ray')
 	import Cartesian2 = require('cesium/Core/Cartesian2')
-	import HeadingPitchRange = require('cesium/Scene/HeadingPitchRange')
-	import Ellipsoid = require('cesium/Core/Ellipsoid')
+	import HeadingPitchRange = require('cesium/Core/HeadingPitchRange')
 	import setViewOptions = require('cesium/Scene/setViewOptions')
 	class Camera 
 	{
@@ -1671,6 +1778,7 @@ declare module 'cesium/Scene/Camera' {
 		//Members
 		static DEFAULT_VIEW_FACTOR: number
 		static DEFAULT_VIEW_RECTANGLE: Rectangle
+		changed: Event
 		constrainedAxis: Cartesian3
 		defaultLookAmount: number
 		defaultMoveAmount: number
@@ -1682,10 +1790,10 @@ declare module 'cesium/Scene/Camera' {
 		heading: number
 		inverseTransform: Matrix4
 		inverseViewMatrix: Matrix4
-		maximumTranslateFactor: number
 		maximumZoomFactor: number
 		moveEnd: Event
 		moveStart: Event
+		percentageChanged: number
 		pitch: number
 		position: Cartesian3
 		positionCartographic: Cartographic
@@ -1703,10 +1811,15 @@ declare module 'cesium/Scene/Camera' {
 		cameraToWorldCoordinates(cartesian : Cartesian4, result? : Cartesian4) : Cartesian4
 		cameraToWorldCoordinatesPoint(cartesian : Cartesian3, result? : Cartesian3) : Cartesian3
 		cameraToWorldCoordinatesVector(cartesian : Cartesian3, result? : Cartesian3) : Cartesian3
+		cancelFlight() : void
+		computeViewRectangle(ellipsoid? : Ellipsoid, result? : Rectangle) : Rectangle|void
+		distanceToBoundingSphere(boundingSphere : BoundingSphere) : number
+		flyHome(duration? : number) : void
 		flyTo(options? : flyToOptions) : void
 		flyToBoundingSphere(boundingSphere : BoundingSphere, options? : flyToBoundingSphereOptions) : void
 		getMagnitude() : number
 		getPickRay(windowPosition : Cartesian2, result? : Ray) : Ray
+		getPixelSize(boundingSphere : BoundingSphere, drawingBufferWidth : number, drawingBufferHeight : number) : number
 		getRectangleCameraCoordinates(rectangle : Rectangle, result? : Cartesian3) : Cartesian3
 		look(axis : Cartesian3, angle? : number) : void
 		lookAt(target : Cartesian3, offset : Cartesian3|HeadingPitchRange) : void
@@ -1732,7 +1845,6 @@ declare module 'cesium/Scene/Camera' {
 		twistLeft(amount? : number) : void
 		twistRight(amount? : number) : void
 		viewBoundingSphere(boundingSphere : BoundingSphere, offset? : HeadingPitchRange) : void
-		viewRectangle(rectangle : Rectangle, ellipsoid? : Ellipsoid) : void
 		worldToCameraCoordinates(cartesian : Cartesian4, result? : Cartesian4) : Cartesian4
 		worldToCameraCoordinatesPoint(cartesian : Cartesian3, result? : Cartesian3) : Cartesian3
 		worldToCameraCoordinatesVector(cartesian : Cartesian3, result? : Cartesian3) : Cartesian3
@@ -1743,16 +1855,37 @@ declare module 'cesium/Scene/Camera' {
 	export = Camera
 
 }
-declare module 'cesium/Core/Matrix4' {
-	import Camera = require('cesium/Scene/Camera')
-	import Matrix3 = require('cesium/Core/Matrix3')
+declare module 'cesium/Core/TranslationRotationScale' {
 	import Cartesian3 = require('cesium/Core/Cartesian3')
 	import Quaternion = require('cesium/Core/Quaternion')
+	class TranslationRotationScale 
+	{
+		constructor(translation? : Cartesian3, rotation? : Quaternion, scale? : Cartesian3);
+		//Members
+		rotation: Quaternion
+		scale: Cartesian3
+		translation: Cartesian3
+
+
+		//Methods
+		equals(right? : TranslationRotationScale) : boolean
+
+	}
+	export = TranslationRotationScale
+
+}
+declare module 'cesium/Core/Matrix4' {
+	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import Camera = require('cesium/Scene/Camera')
+	import Matrix3 = require('cesium/Core/Matrix3')
+	import Quaternion = require('cesium/Core/Quaternion')
+	import TranslationRotationScale = require('cesium/Core/TranslationRotationScale')
 	import Cartesian4 = require('cesium/Core/Cartesian4')
 	class Matrix4 
 	{
 		constructor(column0Row0? : number, column1Row0? : number, column2Row0? : number, column3Row0? : number, column0Row1? : number, column1Row1? : number, column2Row1? : number, column3Row1? : number, column0Row2? : number, column1Row2? : number, column2Row2? : number, column3Row2? : number, column0Row3? : number, column1Row3? : number, column2Row3? : number, column3Row3? : number);
 		//Members
+		length: number
 		static COLUMN0ROW0: number
 		static COLUMN0ROW1: number
 		static COLUMN0ROW2: number
@@ -1782,10 +1915,11 @@ declare module 'cesium/Core/Matrix4' {
 		static abs(matrix : Matrix4, result : Matrix4) : Matrix4
 		static add(left : Matrix4, right : Matrix4, result : Matrix4) : Matrix4
 		static clone(matrix : Matrix4, result? : Matrix4) : Matrix4
-		static computeInfinitePerspectiveOffCenter(left : number, right : number, bottom : number, top : number, near : number, far : number, result : Matrix4) : Matrix4
+		static computeInfinitePerspectiveOffCenter(left : number, right : number, bottom : number, top : number, near : number, result : Matrix4) : Matrix4
 		static computeOrthographicOffCenter(left : number, right : number, bottom : number, top : number, near : number, far : number, result : Matrix4) : Matrix4
 		static computePerspectiveFieldOfView(fovY : number, aspectRatio : number, near : number, far : number, result : Matrix4) : Matrix4
 		static computePerspectiveOffCenter(left : number, right : number, bottom : number, top : number, near : number, far : number, result : Matrix4) : Matrix4
+		static computeView(position : Cartesian3, direction : Cartesian3, up : Cartesian3, right : Cartesian3, result : Matrix4) : Matrix4
 		static computeViewportTransformation(viewport? : any, nearDepthRange? : number, farDepthRange? : number, result? : Matrix4) : Matrix4
 		static equals(left? : Matrix4, right? : Matrix4) : boolean
 		static equalsEpsilon(left? : Matrix4, right? : Matrix4, epsilon? : number) : boolean
@@ -1797,6 +1931,7 @@ declare module 'cesium/Core/Matrix4' {
 		static fromScale(scale : Cartesian3, result? : Matrix4) : Matrix4
 		static fromTranslation(translation : Cartesian3, result? : Matrix4) : Matrix4
 		static fromTranslationQuaternionRotationScale(translation : Cartesian3, rotation : Quaternion, scale : Cartesian3, result? : Matrix4) : Matrix4
+		static fromTranslationRotationScale(translationRotationScale : TranslationRotationScale, result? : Matrix4) : Matrix4
 		static fromUniformScale(scale : number, result? : Matrix4) : Matrix4
 		static getColumn(matrix : Matrix4, index : number, result : Cartesian4) : Cartesian4
 		static getElementIndex(row : number, column : number) : number
@@ -1818,7 +1953,7 @@ declare module 'cesium/Core/Matrix4' {
 		static multiplyByVector(matrix : Matrix4, cartesian : Cartesian4, result : Cartesian4) : Cartesian4
 		static multiplyTransformation(left : Matrix4, right : Matrix4, result : Matrix4) : Matrix4
 		static negate(matrix : Matrix4, result : Matrix4) : Matrix4
-		static pack(value : Matrix4, array : Array<number>, startingIndex? : number) : void
+		static pack(value : Matrix4, array : Array<number>, startingIndex? : number) : Array<number>
 		static setColumn(matrix : Matrix4, index : number, cartesian : Cartesian4, result : Matrix4) : Matrix4
 		static setRow(matrix : Matrix4, index : number, cartesian : Cartesian4, result : Matrix4) : Matrix4
 		static setTranslation(matrix : Matrix4, translation : Cartesian3, result : Cartesian4) : Matrix4
@@ -1835,6 +1970,7 @@ declare module 'cesium/Core/BoundingSphere' {
 	import Cartesian3 = require('cesium/Core/Cartesian3')
 	import Interval = require('cesium/Core/Interval')
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
+	import OrientedBoundingBox = require('cesium/Core/OrientedBoundingBox')
 	import Rectangle = require('cesium/Core/Rectangle')
 	import Intersect = require('cesium/Core/Intersect')
 	import Plane = require('cesium/Core/Plane')
@@ -1858,6 +1994,8 @@ declare module 'cesium/Core/BoundingSphere' {
 		static fromBoundingSpheres(boundingSpheres : Array<BoundingSphere>, result? : BoundingSphere) : BoundingSphere
 		static fromCornerPoints(corner? : Cartesian3, oppositeCorner? : Cartesian3, result? : BoundingSphere) : BoundingSphere
 		static fromEllipsoid(ellipsoid : Ellipsoid, result? : BoundingSphere) : BoundingSphere
+		static fromEncodedCartesianVertices(positionsHigh : Array<number>, positionsLow : Array<number>, result? : BoundingSphere) : BoundingSphere
+		static fromOrientedBoundingBox(orientedBoundingBox : OrientedBoundingBox, result? : BoundingSphere) : BoundingSphere
 		static fromPoints(positions : Array<Cartesian3>, result? : BoundingSphere) : BoundingSphere
 		static fromRectangle2D(rectangle : Rectangle, projection? : any, result? : BoundingSphere) : BoundingSphere
 		static fromRectangle3D(rectangle : Rectangle, ellipsoid? : Ellipsoid, surfaceHeight? : number, result? : BoundingSphere) : BoundingSphere
@@ -1865,7 +2003,7 @@ declare module 'cesium/Core/BoundingSphere' {
 		static fromVertices(positions : Array<number>, center? : Cartesian3, stride? : number, result? : BoundingSphere) : BoundingSphere
 		static intersectPlane(sphere : BoundingSphere, plane : Plane) : Intersect
 		static isOccluded(sphere : BoundingSphere, occluder : Occluder) : boolean
-		static pack(value : BoundingSphere, array : Array<number>, startingIndex? : number) : void
+		static pack(value : BoundingSphere, array : Array<number>, startingIndex? : number) : Array<number>
 		static projectTo2D(sphere : BoundingSphere, projection? : any, result? : BoundingSphere) : BoundingSphere
 		static transform(sphere : BoundingSphere, transform : Matrix4, result? : BoundingSphere) : BoundingSphere
 		static transformWithoutScale(sphere : BoundingSphere, transform : Matrix4, result? : BoundingSphere) : BoundingSphere
@@ -1880,79 +2018,6 @@ declare module 'cesium/Core/BoundingSphere' {
 
 	}
 	export = BoundingSphere
-
-}
-declare module 'cesium/Core/CesiumMath' {
-	class CesiumMath 
-	{
-		constructor();
-		//Members
-		static DEGREES_PER_RADIAN: number
-		static EPSILON1: number
-		static EPSILON2: number
-		static EPSILON3: number
-		static EPSILON4: number
-		static EPSILON5: number
-		static EPSILON6: number
-		static EPSILON7: number
-		static EPSILON8: number
-		static EPSILON9: number
-		static EPSILON10: number
-		static EPSILON11: number
-		static EPSILON12: number
-		static EPSILON13: number
-		static EPSILON14: number
-		static EPSILON15: number
-		static EPSILON16: number
-		static EPSILON17: number
-		static EPSILON18: number
-		static EPSILON19: number
-		static EPSILON20: number
-		static GRAVITATIONALPARAMETER: number
-		static LUNAR_RADIUS: number
-		static ONE_OVER_PI: number
-		static ONE_OVER_TWO_PI: number
-		static PI: number
-		static PI_OVER_FOUR: number
-		static PI_OVER_SIX: number
-		static PI_OVER_THREE: number
-		static PI_OVER_TWO: number
-		static RADIANS_PER_ARCSECOND: number
-		static RADIANS_PER_DEGREE: number
-		static SIXTY_FOUR_KILOBYTES: number
-		static SOLAR_RADIUS: number
-		static THREE_PI_OVER_TWO: number
-		static TWO_PI: number
-
-
-		//Methods
-		static acosClamped(value : number) : number
-		static asinClamped(value : number) : number
-		static chordLength(angle : number, radius : number) : number
-		static clamp(value : number, min : number, max : number) : number
-		static convertLongitudeRange(angle : number) : number
-		static cosh(value : number) : number
-		static equalsEpsilon(left : number, right : number, relativeEpsilon : number, absoluteEpsilon? : number) : boolean
-		static factorial(n : number) : number
-		static fromSNorm(value : number) : number
-		static incrementWrap(n? : number, maximumValue? : number, minimumValue? : number) : number
-		static isPowerOfTwo(n : number) : boolean
-		static lerp(p : number, q : number, time : number) : number
-		static mod(m : number, n : number) : number
-		static negativePiToPi(angle : number) : number
-		static nextPowerOfTwo(n : number) : number
-		static nextRandomNumber() : number
-		static setRandomNumberSeed(seed : number) : void
-		static sign(value : number) : number
-		static signNotZero(value : number) : number
-		static sinh(value : number) : number
-		static toDegrees(radians : number) : number
-		static toRadians(degrees : number) : number
-		static toSNorm(value : number) : number
-		static zeroToTwoPi(angle : number) : number
-
-	}
-	export = CesiumMath
 
 }
 declare module 'cesium/Core/CesiumTerrainProviderOptions' {
@@ -2016,9 +2081,9 @@ declare module 'cesium/Core/CesiumTerrainProvider' {
 	import CesiumTerrainProviderOptions = require('cesium/Core/CesiumTerrainProviderOptions')
 	import Credit = require('cesium/Core/Credit')
 	import Event = require('cesium/Core/Event')
+	import Promise = require('cesium/Promise')
 	import GeographicTilingScheme = require('cesium/Core/GeographicTilingScheme')
 	import TerrainData = require('cesium/Core/TerrainData')
-	import Promise = require('cesium/Promise')
 	class CesiumTerrainProvider 
 	{
 		constructor(options? : CesiumTerrainProviderOptions);
@@ -2028,6 +2093,7 @@ declare module 'cesium/Core/CesiumTerrainProvider' {
 		hasVertexNormals: boolean
 		hasWaterMask: boolean
 		ready: boolean
+		readyPromise: Promise<boolean>
 		requestVertexNormals: boolean
 		requestWaterMask: boolean
 		tilingScheme: GeographicTilingScheme
@@ -2100,7 +2166,7 @@ declare module 'cesium/Core/JulianDate' {
 	import GregorianDate = require('cesium/Core/GregorianDate')
 	class JulianDate 
 	{
-		constructor(julianDayNumber : number, secondsOfDay : number, timeStandard? : TimeStandard);
+		constructor(julianDayNumber? : number, secondsOfDay? : number, timeStandard? : TimeStandard);
 		//Members
 		static leapSeconds: Array<LeapSecond>
 		dayNumber: number
@@ -2238,6 +2304,25 @@ declare module 'cesium/Core/DeveloperError' {
 	export = DeveloperError
 
 }
+declare module 'cesium/Core/DistanceDisplayCondition' {
+	class DistanceDisplayCondition 
+	{
+		constructor(near? : number, far? : number);
+		//Members
+		far: number
+		near: number
+
+
+		//Methods
+		static clone(value? : DistanceDisplayCondition, result? : DistanceDisplayCondition) : DistanceDisplayCondition
+		static equals(left : DistanceDisplayCondition, right : DistanceDisplayCondition) : boolean
+		clone(result? : DistanceDisplayCondition) : DistanceDisplayCondition
+		equals(other : DistanceDisplayCondition) : boolean
+
+	}
+	export = DistanceDisplayCondition
+
+}
 declare module 'cesium/Core/ExtrapolationType' {
 	class ExtrapolationType 
 	{
@@ -2276,6 +2361,81 @@ declare module 'cesium/Core/isArray' {
 	export = isArray
 
 }
+declare module 'cesium/Core/Math' {
+	class Math 
+	{
+		constructor();
+		//Members
+		static DEGREES_PER_RADIAN: number
+		static EPSILON1: number
+		static EPSILON2: number
+		static EPSILON3: number
+		static EPSILON4: number
+		static EPSILON5: number
+		static EPSILON6: number
+		static EPSILON7: number
+		static EPSILON8: number
+		static EPSILON9: number
+		static EPSILON10: number
+		static EPSILON11: number
+		static EPSILON12: number
+		static EPSILON13: number
+		static EPSILON14: number
+		static EPSILON15: number
+		static EPSILON16: number
+		static EPSILON17: number
+		static EPSILON18: number
+		static EPSILON19: number
+		static EPSILON20: number
+		static GRAVITATIONALPARAMETER: number
+		static LUNAR_RADIUS: number
+		static ONE_OVER_PI: number
+		static ONE_OVER_TWO_PI: number
+		static PI: number
+		static PI_OVER_FOUR: number
+		static PI_OVER_SIX: number
+		static PI_OVER_THREE: number
+		static PI_OVER_TWO: number
+		static RADIANS_PER_ARCSECOND: number
+		static RADIANS_PER_DEGREE: number
+		static SIXTY_FOUR_KILOBYTES: number
+		static SOLAR_RADIUS: number
+		static THREE_PI_OVER_TWO: number
+		static TWO_PI: number
+
+
+		//Methods
+		static acosClamped(value : number) : number
+		static asinClamped(value : number) : number
+		static chordLength(angle : number, radius : number) : number
+		static clamp(value : number, min : number, max : number) : number
+		static clampToLatitudeRange(angle : number) : number
+		static convertLongitudeRange(angle : number) : number
+		static cosh(value : number) : number
+		static equalsEpsilon(left : number, right : number, relativeEpsilon : number, absoluteEpsilon? : number) : boolean
+		static factorial(n : number) : number
+		static fromSNorm(value : number, rangeMax? : number) : number
+		static incrementWrap(n? : number, maximumValue? : number, minimumValue? : number) : number
+		static isPowerOfTwo(n : number) : boolean
+		static lerp(p : number, q : number, time : number) : number
+		static logBase(number : number, base : number) : number
+		static mod(m : number, n : number) : number
+		static negativePiToPi(angle : number) : number
+		static nextPowerOfTwo(n : number) : number
+		static nextRandomNumber() : number
+		static setRandomNumberSeed(seed : number) : void
+		static sign(value : number) : number
+		static signNotZero(value : number) : number
+		static sinh(value : number) : number
+		static toDegrees(radians : number) : number
+		static toRadians(degrees : number) : number
+		static toSNorm(value : number, rangeMax? : number) : number
+		static zeroToTwoPi(angle : number) : number
+
+	}
+	export = Math
+
+}
 declare module 'cesium/Core/ReferenceFrame' {
 	class ReferenceFrame 
 	{
@@ -2292,7 +2452,7 @@ declare module 'cesium/Core/ReferenceFrame' {
 
 }
 declare module 'cesium/Core/requestAnimationFrame' {
-	function requestAnimationFrame(callback : any) : void;
+	function requestAnimationFrame(callback : any) : number;
 	export = requestAnimationFrame
 
 }
@@ -2301,6 +2461,7 @@ declare module 'cesium/Core/ScreenSpaceEventHandler' {
 	{
 		constructor(element? : HTMLCanvasElement);
 		//Members
+		static mouseEmulationIgnoreMilliseconds: any
 
 
 		//Methods
@@ -2585,6 +2746,8 @@ declare module 'cesium/DataSources/BillboardGraphicsOptions' {
 		pixelOffsetScaleByDistance?: Property|string;
 		imageSubRegion?: Property|string;
 		sizeInMeters?: Property|string;
+		heightReference?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = BillboardGraphicsOptions
 
@@ -2600,8 +2763,11 @@ declare module 'cesium/DataSources/BillboardGraphics' {
 		alignedAxis: Property|string
 		color: Property|string
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
+		distanceDisplayCondition: Property|string
 		eyeOffset: Property|string
 		height: Property|string
+		heightReference: Property|string
 		horizontalOrigin: Property|string
 		image: Property|string
 		imageSubRegion: Property|string
@@ -2658,6 +2824,8 @@ declare module 'cesium/DataSources/BoxGraphicsOptions' {
 		outline?: Property|string;
 		outlineColor?: Property|string;
 		outlineWidth?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = BoxGraphicsOptions
 
@@ -2673,11 +2841,13 @@ declare module 'cesium/DataSources/BoxGraphics' {
 		//Members
 		definitionChanged: Event
 		dimensions: Property|string
+		distanceDisplayCondition: Property|string
 		fill: Property|string
 		material: MaterialProperty
 		outline: Property|string
 		outlineColor: Property|string
 		outlineWidth: Property|string
+		shadows: Property|string
 		show: Property|string
 
 
@@ -2687,59 +2857,6 @@ declare module 'cesium/DataSources/BoxGraphics' {
 
 	}
 	export = BoxGraphics
-
-}
-declare module 'cesium/DataSources/CorridorGraphicsOptions' {
-	import Property = require('cesium/DataSources/Property')
-	import MaterialProperty = require('cesium/DataSources/MaterialProperty')
-	interface CorridorGraphicsOptions
-	{
-		positions?: Property|string;
-		width?: Property|string;
-		cornerType?: Property|string;
-		height?: Property|string;
-		extrudedHeight?: Property|string;
-		show?: Property|string;
-		fill?: Property|string;
-		material?: MaterialProperty;
-		outline?: Property|string;
-		outlineColor?: Property|string;
-		outlineWidth?: Property|string;
-		granularity?: Property|string;
-	}
-	export = CorridorGraphicsOptions
-
-}
-declare module 'cesium/DataSources/CorridorGraphics' {
-	import CorridorGraphicsOptions = require('cesium/DataSources/CorridorGraphicsOptions')
-	import Property = require('cesium/DataSources/Property')
-	import Event = require('cesium/Core/Event')
-	import MaterialProperty = require('cesium/DataSources/MaterialProperty')
-	class CorridorGraphics 
-	{
-		constructor(options? : CorridorGraphicsOptions);
-		//Members
-		cornerType: Property|string
-		definitionChanged: Event
-		extrudedHeight: Property|string
-		fill: Property|string
-		granularity: Property|string
-		height: Property|string
-		material: MaterialProperty
-		outline: Property|string
-		outlineColor: Property|string
-		outlineWidth: Property|string
-		positions: Property|string
-		show: Property|string
-		width: Property|string
-
-
-		//Methods
-		clone(result? : CorridorGraphics) : CorridorGraphics
-		merge(source : CorridorGraphics) : void
-
-	}
-	export = CorridorGraphics
 
 }
 declare module 'cesium/DataSources/DataSourceClock' {
@@ -2771,6 +2888,64 @@ declare module 'cesium/DataSources/DataSourceClock' {
 	export = DataSourceClock
 
 }
+declare module 'cesium/DataSources/EntityClusterOptions' {
+	interface EntityClusterOptions
+	{
+		enabled?: boolean;
+		pixelRange?: number;
+		minimumClusterSize?: number;
+	}
+	export = EntityClusterOptions
+
+}
+declare module 'cesium/DataSources/EntityCluster' {
+	import EntityClusterOptions = require('cesium/DataSources/EntityClusterOptions')
+	import Event = require('cesium/Core/Event')
+	class EntityCluster 
+	{
+		constructor(options? : EntityClusterOptions);
+		//Members
+		clusterEvent: Event
+		enabled: boolean
+		minimumClusterSize: number
+		pixelRange: number
+
+
+		//Methods
+		destroy() : void
+
+	}
+	export = EntityCluster
+
+}
+declare module 'cesium/DataSources/DataSource' {
+	import Event = require('cesium/Core/Event')
+	import DataSourceClock = require('cesium/DataSources/DataSourceClock')
+	import EntityCluster = require('cesium/DataSources/EntityCluster')
+	import EntityCollection = require('cesium/DataSources/EntityCollection')
+	import JulianDate = require('cesium/Core/JulianDate')
+	class DataSource 
+	{
+		constructor();
+		//Members
+		changedEvent: Event
+		clock: DataSourceClock
+		clustering: EntityCluster
+		entities: EntityCollection
+		errorEvent: Event
+		isLoading: boolean
+		loadingEvent: Event
+		name: string
+		show: boolean
+
+
+		//Methods
+		update(time : JulianDate) : boolean
+
+	}
+	export = DataSource
+
+}
 declare module 'cesium/DataSources/PositionProperty' {
 	import Event = require('cesium/Core/Event')
 	import ReferenceFrame = require('cesium/Core/ReferenceFrame')
@@ -2795,6 +2970,63 @@ declare module 'cesium/DataSources/PositionProperty' {
 	export = PositionProperty
 
 }
+declare module 'cesium/DataSources/CorridorGraphicsOptions' {
+	import Property = require('cesium/DataSources/Property')
+	import MaterialProperty = require('cesium/DataSources/MaterialProperty')
+	interface CorridorGraphicsOptions
+	{
+		positions?: Property|string;
+		width?: Property|string;
+		cornerType?: Property|string;
+		height?: Property|string;
+		extrudedHeight?: Property|string;
+		show?: Property|string;
+		fill?: Property|string;
+		material?: MaterialProperty;
+		outline?: Property|string;
+		outlineColor?: Property|string;
+		outlineWidth?: Property|string;
+		granularity?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
+	}
+	export = CorridorGraphicsOptions
+
+}
+declare module 'cesium/DataSources/CorridorGraphics' {
+	import CorridorGraphicsOptions = require('cesium/DataSources/CorridorGraphicsOptions')
+	import Property = require('cesium/DataSources/Property')
+	import Event = require('cesium/Core/Event')
+	import MaterialProperty = require('cesium/DataSources/MaterialProperty')
+	class CorridorGraphics 
+	{
+		constructor(options? : CorridorGraphicsOptions);
+		//Members
+		cornerType: Property|string
+		definitionChanged: Event
+		distanceDisplayCondition: Property|string
+		extrudedHeight: Property|string
+		fill: Property|string
+		granularity: Property|string
+		height: Property|string
+		material: MaterialProperty
+		outline: Property|string
+		outlineColor: Property|string
+		outlineWidth: Property|string
+		positions: Property|string
+		shadows: Property|string
+		show: Property|string
+		width: Property|string
+
+
+		//Methods
+		clone(result? : CorridorGraphics) : CorridorGraphics
+		merge(source : CorridorGraphics) : void
+
+	}
+	export = CorridorGraphics
+
+}
 declare module 'cesium/DataSources/CylinderGraphicsOptions' {
 	import Property = require('cesium/DataSources/Property')
 	import MaterialProperty = require('cesium/DataSources/MaterialProperty')
@@ -2811,6 +3043,8 @@ declare module 'cesium/DataSources/CylinderGraphicsOptions' {
 		outlineWidth?: Property|string;
 		numberOfVerticalLines?: Property|string;
 		slices?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = CylinderGraphicsOptions
 
@@ -2826,6 +3060,7 @@ declare module 'cesium/DataSources/CylinderGraphics' {
 		//Members
 		bottomRadius: Property|string
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		fill: Property|string
 		length: Property|string
 		material: MaterialProperty
@@ -2833,6 +3068,7 @@ declare module 'cesium/DataSources/CylinderGraphics' {
 		outline: Property|string
 		outlineColor: Property|string
 		outlineWidth: Property|string
+		shadows: Property|string
 		show: Property|string
 		slices: Property|string
 		topRadius: Property|string
@@ -2865,6 +3101,8 @@ declare module 'cesium/DataSources/EllipseGraphicsOptions' {
 		rotation?: Property|string;
 		stRotation?: Property|string;
 		granularity?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = EllipseGraphicsOptions
 
@@ -2879,6 +3117,7 @@ declare module 'cesium/DataSources/EllipseGraphics' {
 		constructor(options? : EllipseGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		extrudedHeight: Property|string
 		fill: Property|string
 		granularity: Property|string
@@ -2891,6 +3130,7 @@ declare module 'cesium/DataSources/EllipseGraphics' {
 		rotation: Property|string
 		semiMajorAxis: Property|string
 		semiMinorAxis: Property|string
+		shadows: Property|string
 		show: Property|string
 		stRotation: Property|string
 
@@ -2918,6 +3158,8 @@ declare module 'cesium/DataSources/EllipsoidGraphicsOptions' {
 		subdivisions?: Property|string;
 		stackPartitions?: Property|string;
 		slicePartitions?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = EllipsoidGraphicsOptions
 
@@ -2932,12 +3174,14 @@ declare module 'cesium/DataSources/EllipsoidGraphics' {
 		constructor(options? : EllipsoidGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		fill: Property|string
 		material: MaterialProperty
 		outline: Property|string
 		outlineColor: Property|string
 		outlineWidth: Property|string
 		radii: Property|string
+		shadows: Property|string
 		show: Property|string
 		slicePartitions: Property|string
 		stackPartitions: Property|string
@@ -2970,6 +3214,8 @@ declare module 'cesium/DataSources/LabelGraphicsOptions' {
 		pixelOffset?: Property|string;
 		translucencyByDistance?: Property|string;
 		pixelOffsetScaleByDistance?: Property|string;
+		heightReference?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = LabelGraphicsOptions
 
@@ -2983,9 +3229,11 @@ declare module 'cesium/DataSources/LabelGraphics' {
 		constructor(options? : LabelGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		eyeOffset: Property|string
 		fillColor: Property|string
 		font: Property|string
+		heightReference: Property|string
 		horizontalOrigin: Property|string
 		outlineColor: Property|string
 		outlineWidth: Property|string
@@ -3015,21 +3263,61 @@ declare module 'cesium/DataSources/ModelGraphicsOptions' {
 		show?: Property|string;
 		scale?: Property|string;
 		minimumPixelSize?: Property|string;
+		maximumScale?: Property|string;
+		incrementallyLoadTextures?: Property|string;
+		runAnimations?: Property|string;
+		nodeTransformations?: Property|string;
+		shadows?: Property|string;
+		heightReference?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = ModelGraphicsOptions
+
+}
+declare module 'cesium/DataSources/PropertyBag' {
+	import Event = require('cesium/Core/Event')
+	import Property = require('cesium/DataSources/Property')
+	import JulianDate = require('cesium/Core/JulianDate')
+	class PropertyBag 
+	{
+		constructor(value? : any, createPropertyCallback? : (()=>void));
+		//Members
+		definitionChanged: Event
+		isConstant: boolean
+		propertyNames: Array<any>
+
+
+		//Methods
+		addProperty(propertyName : string, value? : Any, createPropertyCallback? : (()=>void)) : void
+		equals(other? : Property|string) : boolean
+		getValue(time : JulianDate, result? : any) : Object
+		hasProperty(propertyName : string) : boolean
+		merge(source : any, createPropertyCallback? : (()=>void)) : void
+		removeProperty(propertyName : string) : void
+
+	}
+	export = PropertyBag
 
 }
 declare module 'cesium/DataSources/ModelGraphics' {
 	import ModelGraphicsOptions = require('cesium/DataSources/ModelGraphicsOptions')
 	import Event = require('cesium/Core/Event')
 	import Property = require('cesium/DataSources/Property')
+	import PropertyBag = require('cesium/DataSources/PropertyBag')
 	class ModelGraphics 
 	{
 		constructor(options? : ModelGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
+		heightReference: Property|string
+		incrementallyLoadTextures: Property|string
+		maximumScale: Property|string
 		minimumPixelSize: Property|string
+		nodeTransformations: PropertyBag
+		runAnimations: Property|string
 		scale: Property|string
+		shadows: Property|string
 		show: Property|string
 		uri: Property|string
 
@@ -3053,6 +3341,7 @@ declare module 'cesium/DataSources/PathGraphicsOptions' {
 		width?: Property|string;
 		material?: MaterialProperty;
 		resolution?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = PathGraphicsOptions
 
@@ -3067,6 +3356,7 @@ declare module 'cesium/DataSources/PathGraphics' {
 		constructor(options? : PathGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		leadTime: Property|string
 		material: MaterialProperty
 		resolution: Property|string
@@ -3094,6 +3384,8 @@ declare module 'cesium/DataSources/PointGraphicsOptions' {
 		show?: Property|string;
 		scaleByDistance?: Property|string;
 		translucencyByDistance?: Property|string;
+		heightReference?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = PointGraphicsOptions
 
@@ -3108,6 +3400,8 @@ declare module 'cesium/DataSources/PointGraphics' {
 		//Members
 		color: Property|string
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
+		heightReference: Property|string
 		outlineColor: Property|string
 		outlineWidth: Property|string
 		pixelSize: Property|string
@@ -3141,19 +3435,25 @@ declare module 'cesium/DataSources/PolygonGraphicsOptions' {
 		stRotation?: Property|string;
 		granularity?: Property|string;
 		perPositionHeight?: Property|string;
+		closeTop?: boolean;
+		closeBottom?: boolean;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = PolygonGraphicsOptions
 
 }
 declare module 'cesium/DataSources/PolygonGraphics' {
 	import PolygonGraphicsOptions = require('cesium/DataSources/PolygonGraphicsOptions')
-	import Event = require('cesium/Core/Event')
 	import Property = require('cesium/DataSources/Property')
+	import Event = require('cesium/Core/Event')
 	import MaterialProperty = require('cesium/DataSources/MaterialProperty')
 	class PolygonGraphics 
 	{
 		constructor(options? : PolygonGraphicsOptions);
 		//Members
+		closeBottom: Property|string
+		closeTop: Property|string
 		definitionChanged: Event
 		extrudedHeight: Property|string
 		fill: Property|string
@@ -3165,6 +3465,7 @@ declare module 'cesium/DataSources/PolygonGraphics' {
 		outlineColor: Property|string
 		outlineWidth: Property|string
 		perPositionHeight: Property|string
+		shadows: Property|string
 		show: Property|string
 		stRotation: Property|string
 
@@ -3188,6 +3489,8 @@ declare module 'cesium/DataSources/PolylineGraphicsOptions' {
 		show?: Property|string;
 		material?: MaterialProperty;
 		granularity?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = PolylineGraphicsOptions
 
@@ -3202,10 +3505,12 @@ declare module 'cesium/DataSources/PolylineGraphics' {
 		constructor(options? : PolylineGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		followSurface: Property|string
 		granularity: Property|string
 		material: MaterialProperty
 		positions: Property|string
+		shadows: Property|string
 		show: Property|string
 		width: Property|string
 
@@ -3233,6 +3538,8 @@ declare module 'cesium/DataSources/PolylineVolumeGraphicsOptions' {
 		outlineColor?: Property|string;
 		outlineWidth?: Property|string;
 		granularity?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = PolylineVolumeGraphicsOptions
 
@@ -3248,6 +3555,7 @@ declare module 'cesium/DataSources/PolylineVolumeGraphics' {
 		//Members
 		cornerType: Property|string
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		fill: Property|string
 		granularity: Property|string
 		material: MaterialProperty
@@ -3255,6 +3563,7 @@ declare module 'cesium/DataSources/PolylineVolumeGraphics' {
 		outlineColor: Property|string
 		outlineWidth: Property|string
 		positions: Property|string
+		shadows: Property|string
 		shape: Property|string
 		show: Property|string
 
@@ -3286,6 +3595,8 @@ declare module 'cesium/DataSources/RectangleGraphicsOptions' {
 		rotation?: Property|string;
 		stRotation?: Property|string;
 		granularity?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = RectangleGraphicsOptions
 
@@ -3303,6 +3614,7 @@ declare module 'cesium/DataSources/RectangleGraphics' {
 		closeTop: Property|string
 		coordinates: Property|string
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		extrudedHeight: Property|string
 		fill: Property|string
 		granularity: Property|string
@@ -3312,6 +3624,7 @@ declare module 'cesium/DataSources/RectangleGraphics' {
 		outlineColor: Property|string
 		outlineWidth: Property|string
 		rotation: Property|string
+		shadows: Property|string
 		show: Property|string
 		stRotation: Property|string
 
@@ -3339,6 +3652,8 @@ declare module 'cesium/DataSources/WallGraphicsOptions' {
 		outlineColor?: Property|string;
 		outlineWidth?: Property|string;
 		granularity?: Property|string;
+		shadows?: Property|string;
+		distanceDisplayCondition?: Property|string;
 	}
 	export = WallGraphicsOptions
 
@@ -3353,6 +3668,7 @@ declare module 'cesium/DataSources/WallGraphics' {
 		constructor(options? : WallGraphicsOptions);
 		//Members
 		definitionChanged: Event
+		distanceDisplayCondition: Property|string
 		fill: Property|string
 		granularity: Property|string
 		material: MaterialProperty
@@ -3362,6 +3678,7 @@ declare module 'cesium/DataSources/WallGraphics' {
 		outlineColor: Property|string
 		outlineWidth: Property|string
 		positions: Property|string
+		shadows: Property|string
 		show: Property|string
 
 
@@ -3374,6 +3691,7 @@ declare module 'cesium/DataSources/WallGraphics' {
 
 }
 declare module 'cesium/DataSources/EntityOptions' {
+	import TimeIntervalCollection = require('cesium/Core/TimeIntervalCollection')
 	import Property = require('cesium/DataSources/Property')
 	import PositionProperty = require('cesium/DataSources/PositionProperty')
 	import Entity = require('cesium/DataSources/Entity')
@@ -3396,6 +3714,7 @@ declare module 'cesium/DataSources/EntityOptions' {
 	{
 		id?: string;
 		name?: string;
+		availability?: TimeIntervalCollection;
 		show?: boolean;
 		description?: Property|string;
 		position?: PositionProperty;
@@ -3432,6 +3751,7 @@ declare module 'cesium/DataSources/Entity' {
 	import Property = require('cesium/DataSources/Property')
 	import EllipseGraphics = require('cesium/DataSources/EllipseGraphics')
 	import EllipsoidGraphics = require('cesium/DataSources/EllipsoidGraphics')
+	import EntityCollection = require('cesium/DataSources/EntityCollection')
 	import LabelGraphics = require('cesium/DataSources/LabelGraphics')
 	import ModelGraphics = require('cesium/DataSources/ModelGraphics')
 	import PathGraphics = require('cesium/DataSources/PathGraphics')
@@ -3456,6 +3776,7 @@ declare module 'cesium/DataSources/Entity' {
 		description: Property|string
 		ellipse: EllipseGraphics
 		ellipsoid: EllipsoidGraphics
+		entityCollection: EntityCollection
 		id: string
 		isShowing: boolean
 		label: LabelGraphics
@@ -3469,7 +3790,7 @@ declare module 'cesium/DataSources/Entity' {
 		polyline: PolylineGraphics
 		polylineVolume: PolylineVolumeGraphics
 		position: PositionProperty
-		propertyNames: Event
+		propertyNames: Array<any>
 		rectangle: RectangleGraphics
 		show: boolean
 		viewFrom: Property|string
@@ -3487,15 +3808,19 @@ declare module 'cesium/DataSources/Entity' {
 
 }
 declare module 'cesium/DataSources/EntityCollection' {
+	import DataSource = require('cesium/DataSources/DataSource')
+	import CompositeEntityCollection = require('cesium/DataSources/CompositeEntityCollection')
 	import Event = require('cesium/Core/Event')
 	import Entity = require('cesium/DataSources/Entity')
 	import TimeInterval = require('cesium/Core/TimeInterval')
 	class EntityCollection 
 	{
-		constructor();
+		constructor(owner? : DataSource|CompositeEntityCollection);
 		//Members
 		collectionChanged: Event
 		id: string
+		owner: DataSource|CompositeEntityCollection
+		show: boolean
 		values: Array<Entity>
 
 
@@ -3516,9 +3841,48 @@ declare module 'cesium/DataSources/EntityCollection' {
 	export = EntityCollection
 
 }
+declare module 'cesium/DataSources/CompositeEntityCollection' {
+	import EntityCollection = require('cesium/DataSources/EntityCollection')
+	import DataSource = require('cesium/DataSources/DataSource')
+	import Event = require('cesium/Core/Event')
+	import Entity = require('cesium/DataSources/Entity')
+	import TimeInterval = require('cesium/Core/TimeInterval')
+	class CompositeEntityCollection 
+	{
+		constructor(collections? : Array<EntityCollection>, owner? : DataSource|CompositeEntityCollection);
+		//Members
+		collectionChanged: Event
+		id: string
+		owner: DataSource|CompositeEntityCollection
+		values: Array<Entity>
+
+
+		//Methods
+		addCollection(collection : EntityCollection, index? : number) : void
+		computeAvailability() : TimeInterval
+		contains(entity : Entity) : boolean
+		containsCollection(collection : EntityCollection) : boolean
+		getById(id : any) : Entity
+		getCollection(index : number) : void
+		getCollectionsLength() : void
+		indexOfCollection(collection : EntityCollection) : number
+		lowerCollection(collection : EntityCollection) : void
+		lowerCollectionToBottom(collection : EntityCollection) : void
+		raiseCollection(collection : EntityCollection) : void
+		raiseCollectionToTop(collection : EntityCollection) : void
+		removeAllCollections() : void
+		removeCollection(collection : EntityCollection) : boolean
+		resumeEvents() : void
+		suspendEvents() : void
+
+	}
+	export = CompositeEntityCollection
+
+}
 declare module 'cesium/DataSources/CustomDataSource' {
 	import Event = require('cesium/Core/Event')
 	import DataSourceClock = require('cesium/DataSources/DataSourceClock')
+	import EntityCluster = require('cesium/DataSources/EntityCluster')
 	import EntityCollection = require('cesium/DataSources/EntityCollection')
 	class CustomDataSource 
 	{
@@ -3526,42 +3890,19 @@ declare module 'cesium/DataSources/CustomDataSource' {
 		//Members
 		changedEvent: Event
 		clock: DataSourceClock
+		clustering: EntityCluster
 		entities: EntityCollection
 		errorEvent: Event
 		isLoading: boolean
 		loadingEvent: Event
 		name: string
+		show: boolean
 
 
 		//Methods
 
 	}
 	export = CustomDataSource
-
-}
-declare module 'cesium/DataSources/DataSource' {
-	import Event = require('cesium/Core/Event')
-	import DataSourceClock = require('cesium/DataSources/DataSourceClock')
-	import EntityCollection = require('cesium/DataSources/EntityCollection')
-	import JulianDate = require('cesium/Core/JulianDate')
-	class DataSource 
-	{
-		constructor();
-		//Members
-		changedEvent: Event
-		clock: DataSourceClock
-		entities: EntityCollection
-		errorEvent: Event
-		isLoading: boolean
-		loadingEvent: Event
-		name: string
-
-
-		//Methods
-		update(time : JulianDate) : boolean
-
-	}
-	export = DataSource
 
 }
 declare module 'cesium/DataSources/loadOptions' {
@@ -3584,6 +3925,7 @@ declare module 'cesium/DataSources/CzmlDataSource' {
 	import DataSource = require('cesium/DataSources/DataSource')
 	import Event = require('cesium/Core/Event')
 	import DataSourceClock = require('cesium/DataSources/DataSourceClock')
+	import EntityCluster = require('cesium/DataSources/EntityCluster')
 	import EntityCollection = require('cesium/DataSources/EntityCollection')
 	import Promise = require('cesium/Promise')
 	import loadOptions = require('cesium/DataSources/loadOptions')
@@ -3596,11 +3938,13 @@ declare module 'cesium/DataSources/CzmlDataSource' {
 		static updaters: Array<any>
 		changedEvent: Event
 		clock: DataSourceClock
+		clustering: EntityCluster
 		entities: EntityCollection
 		errorEvent: Event
 		isLoading: boolean
 		loadingEvent: Event
 		name: string
+		show: boolean
 
 
 		//Methods
@@ -3667,6 +4011,7 @@ declare module 'cesium/DataSources/DataSourceDisplay' {
 		static defaultVisualizersCallback: any
 		dataSources: DataSourceCollection
 		defaultDataSource: CustomDataSource
+		ready: boolean
 		scene: Scene
 
 
@@ -3683,22 +4028,22 @@ declare module 'cesium/DataSources/EntityView' {
 	import Entity = require('cesium/DataSources/Entity')
 	import Scene = require('cesium/Scene/Scene')
 	import Ellipsoid = require('cesium/Core/Ellipsoid')
-	import BoundingSphere = require('cesium/Core/BoundingSphere')
 	import Cartesian3 = require('cesium/Core/Cartesian3')
+	import BoundingSphere = require('cesium/Core/BoundingSphere')
 	import JulianDate = require('cesium/Core/JulianDate')
 	class EntityView 
 	{
-		constructor(entity : Entity, scene : Scene, ellipsoid? : Ellipsoid, boundingSphere? : BoundingSphere);
+		constructor(entity : Entity, scene : Scene, ellipsoid? : Ellipsoid);
 		//Members
 		static defaultOffset3D: Cartesian3
-		boundingSphere: Entity
+		boundingSphere: BoundingSphere
 		ellipsoid: Ellipsoid
 		entity: Entity
 		scene: Scene
 
 
 		//Methods
-		update(time : JulianDate) : void
+		update(time : JulianDate, current : BoundingSphere) : void
 
 	}
 	export = EntityView
@@ -3843,8 +4188,28 @@ declare module 'cesium/Scene/FrameRateMonitor' {
 	export = FrameRateMonitor
 
 }
+declare module 'cesium/Scene/HeightReference' {
+	class HeightReference 
+	{
+		constructor();
+		//Members
+		static CLAMP_TO_GROUND: number
+		static NONE: number
+		static RELATIVE_TO_GROUND: number
+
+
+		//Methods
+
+	}
+	export = HeightReference
+
+}
 declare module 'cesium/Scene/ModelOptions' {
 	import Matrix4 = require('cesium/Core/Matrix4')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
+	import HeightReference = require('cesium/Scene/HeightReference')
+	import Scene = require('cesium/Scene/Scene')
+	import DistanceDisplayCondition = require('cesium/Core/DistanceDisplayCondition')
 	interface ModelOptions
 	{
 		gltf?: Object|ArrayBuffer|Uint8Array;
@@ -3853,11 +4218,17 @@ declare module 'cesium/Scene/ModelOptions' {
 		modelMatrix?: Matrix4;
 		scale?: number;
 		minimumPixelSize?: number;
+		maximumScale?: number;
 		id?: Object;
 		allowPicking?: boolean;
+		incrementallyLoadTextures?: boolean;
 		asynchronous?: boolean;
+		shadows?: ShadowMode;
 		debugShowBoundingVolume?: boolean;
 		debugWireframe?: boolean;
+		heightReference?: HeightReference;
+		scene?: Scene;
+		istanceDisplayCondition?: DistanceDisplayCondition;
 	}
 	export = ModelOptions
 
@@ -3966,6 +4337,7 @@ declare module 'cesium/Scene/ModelAnimationCollection' {
 }
 declare module 'cesium/Scene/fromGltfOptions' {
 	import Matrix4 = require('cesium/Core/Matrix4')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
 	interface fromGltfOptions
 	{
 		url: string;
@@ -3974,8 +4346,12 @@ declare module 'cesium/Scene/fromGltfOptions' {
 		modelMatrix?: Matrix4;
 		scale?: number;
 		minimumPixelSize?: number;
+		maximumScale?: number;
+		id?: Object;
 		allowPicking?: boolean;
+		incrementallyLoadTextures?: boolean;
 		asynchronous?: boolean;
+		shadows?: ShadowMode;
 		debugShowBoundingVolume?: boolean;
 		debugWireframe?: boolean;
 	}
@@ -4038,8 +4414,10 @@ declare module 'cesium/Scene/Model' {
 	import ModelOptions = require('cesium/Scene/ModelOptions')
 	import ModelAnimationCollection = require('cesium/Scene/ModelAnimationCollection')
 	import BoundingSphere = require('cesium/Core/BoundingSphere')
+	import DistanceDisplayCondition = require('cesium/Core/DistanceDisplayCondition')
 	import Matrix4 = require('cesium/Core/Matrix4')
 	import Promise = require('cesium/Promise')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
 	import fromGltfOptions = require('cesium/Scene/fromGltfOptions')
 	import ModelMaterial = require('cesium/Scene/ModelMaterial')
 	import ModelMesh = require('cesium/Scene/ModelMesh')
@@ -4055,13 +4433,18 @@ declare module 'cesium/Scene/Model' {
 		boundingSphere: BoundingSphere
 		debugShowBoundingVolume: boolean
 		debugWireframe: boolean
+		distanceDisplayCondition: DistanceDisplayCondition
 		gltf: Object
 		id: Object
+		incrementallyLoadTextures: boolean
+		maximumScale: number
 		minimumPixelSize: number
 		modelMatrix: Matrix4
+		pendingTextureLoads: number
 		ready: boolean
 		readyPromise: Promise<Model>
 		scale: number
+		shadows: ShadowMode
 		show: boolean
 
 
@@ -4110,11 +4493,11 @@ declare module 'cesium/Scene/WebMapTileServiceImageryProvider' {
 	import Credit = require('cesium/Core/Credit')
 	import Event = require('cesium/Core/Event')
 	import DefaultProxy = require('cesium/Core/DefaultProxy')
+	import Promise = require('cesium/Promise')
 	import Rectangle = require('cesium/Core/Rectangle')
 	import TileDiscardPolicy = require('cesium/Scene/TileDiscardPolicy')
 	import TilingScheme = require('cesium/Core/TilingScheme')
 	import ImageryLayerFeatureInfo = require('cesium/Scene/ImageryLayerFeatureInfo')
-	import Promise = require('cesium/Promise')
 	class WebMapTileServiceImageryProvider 
 	{
 		constructor(options? : WebMapTileServiceImageryProviderOptions);
@@ -4127,6 +4510,7 @@ declare module 'cesium/Scene/WebMapTileServiceImageryProvider' {
 		minimumLevel: number
 		proxy: DefaultProxy
 		ready: boolean
+		readyPromise: Promise<boolean>
 		rectangle: Rectangle
 		tileDiscardPolicy: TileDiscardPolicy
 		tileHeight: number
@@ -4387,6 +4771,8 @@ declare module 'cesium/Widgets/CesiumWidget/CesiumWidgetOptions' {
 	import SceneMode = require('cesium/Scene/SceneMode')
 	import MapProjection = require('cesium/Core/MapProjection')
 	import Globe = require('cesium/Scene/Globe')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
+	import MapMode2D = require('cesium/Scene/MapMode2D')
 	interface CesiumWidgetOptions
 	{
 		clock?: Clock;
@@ -4404,6 +4790,10 @@ declare module 'cesium/Widgets/CesiumWidget/CesiumWidgetOptions' {
 		showRenderLoopErrors?: boolean;
 		contextOptions?: Object;
 		creditContainer?: Element|string;
+		terrainExaggeration?: number;
+		shadows?: boolean;
+		terrainShadows?: ShadowMode;
+		mapMode2D?: MapMode2D;
 	}
 	export = CesiumWidgetOptions
 
@@ -4521,6 +4911,7 @@ declare module 'cesium/Widgets/Geocoder/GeocoderViewModel' {
 		complete: Event
 		flightDuration: number|void
 		isSearchInProgress: boolean
+		keepExpanded: boolean
 		key: string
 		scene: Scene
 		search: Command
@@ -4805,11 +5196,14 @@ declare module 'cesium/Widgets/Viewer/ViewerOptions' {
 	import MapProjection = require('cesium/Core/MapProjection')
 	import Globe = require('cesium/Scene/Globe')
 	import DataSourceCollection = require('cesium/DataSources/DataSourceCollection')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
+	import MapMode2D = require('cesium/Scene/MapMode2D')
 	interface ViewerOptions
 	{
 		animation?: boolean;
 		baseLayerPicker?: boolean;
 		fullscreenButton?: boolean;
+		vrButton?: boolean;
 		geocoder?: boolean;
 		homeButton?: boolean;
 		infoBox?: boolean;
@@ -4840,12 +5234,57 @@ declare module 'cesium/Widgets/Viewer/ViewerOptions' {
 		orderIndependentTranslucency?: boolean;
 		creditContainer?: Element|string;
 		dataSources?: DataSourceCollection;
+		terrainExaggeration?: number;
+		shadows?: boolean;
+		terrainShadows?: ShadowMode;
+		mapMode2D?: MapMode2D;
 	}
 	export = ViewerOptions
 
 }
+declare module 'cesium/Widgets/VRButton/VRButtonViewModel' {
+	import Scene = require('cesium/Scene/Scene')
+	import Command = require('cesium/Widgets/Command')
+	class VRButtonViewModel 
+	{
+		constructor(scene : Scene, vrElement? : Element|string);
+		//Members
+		command: Command
+		isVREnabled: boolean
+		isVRMode: boolean
+		tooltip: string
+		vrElement: Element
+
+
+		//Methods
+		destroy() : void
+		isDestroyed() : boolean
+
+	}
+	export = VRButtonViewModel
+
+}
+declare module 'cesium/Widgets/VRButton/VRButton' {
+	import Scene = require('cesium/Scene/Scene')
+	import VRButtonViewModel = require('cesium/Widgets/VRButton/VRButtonViewModel')
+	class VRButton 
+	{
+		constructor(container : Element|string, scene : Scene, vrElement? : Element|string);
+		//Members
+		container: Element
+		viewModel: VRButtonViewModel
+
+
+		//Methods
+		destroy() : void
+		isDestroyed() : boolean
+
+	}
+	export = VRButton
+
+}
 declare module 'cesium/Widgets/Viewer/flyToOptions' {
-	import HeadingPitchRange = require('cesium/Scene/HeadingPitchRange')
+	import HeadingPitchRange = require('cesium/Core/HeadingPitchRange')
 	interface flyToOptions
 	{
 		duration?: number;
@@ -4876,12 +5315,16 @@ declare module 'cesium/Widgets/Viewer/Viewer' {
 	import ScreenSpaceEventHandler = require('cesium/Core/ScreenSpaceEventHandler')
 	import Entity = require('cesium/DataSources/Entity')
 	import SelectionIndicator = require('cesium/Widgets/SelectionIndicator/SelectionIndicator')
+	import ShadowMap = require('cesium/Scene/ShadowMap')
 	import TerrainProvider = require('cesium/Core/TerrainProvider')
+	import ShadowMode = require('cesium/Scene/ShadowMode')
 	import Timeline = require('cesium/Widgets/Timeline/Timeline')
+	import VRButton = require('cesium/Widgets/VRButton/VRButton')
 	import Promise = require('cesium/Promise')
 	import DataSource = require('cesium/DataSources/DataSource')
+	import ImageryLayer = require('cesium/Scene/ImageryLayer')
 	import flyToOptions = require('cesium/Widgets/Viewer/flyToOptions')
-	import HeadingPitchRange = require('cesium/Scene/HeadingPitchRange')
+	import HeadingPitchRange = require('cesium/Core/HeadingPitchRange')
 	class Viewer 
 	{
 		constructor(container : Element|string, options? : ViewerOptions);
@@ -4911,22 +5354,26 @@ declare module 'cesium/Widgets/Viewer/Viewer' {
 		screenSpaceEventHandler: ScreenSpaceEventHandler
 		selectedEntity: Entity
 		selectionIndicator: SelectionIndicator
+		shadowMap: ShadowMap
+		shadows: boolean
 		targetFrameRate: number
 		terrainProvider: TerrainProvider
+		terrainShadows: ShadowMode
 		timeline: Timeline
 		trackedEntity: Entity
 		useDefaultRenderLoop: boolean
+		vrButton: VRButton
 
 
 		//Methods
 		destroy() : void
 		extend(mixin : any, options? : any) : void
-		flyTo(target : Entity|Array<Entity>|EntityCollection|DataSource|Promise<Entity|Array<Entity>|EntityCollection|DataSource>, options? : flyToOptions) : Promise<boolean>
+		flyTo(target : Entity|Array<Entity>|EntityCollection|DataSource|ImageryLayer|Promise<Entity|Array<Entity>|EntityCollection|DataSource|ImageryLayer>, options? : flyToOptions) : Promise<boolean>
 		forceResize() : void
 		isDestroyed() : boolean
 		render() : void
 		resize() : void
-		zoomTo(target : Entity|Array<Entity>|EntityCollection|DataSource|Promise<Entity|Array<Entity>|EntityCollection|DataSource>, offset? : HeadingPitchRange) : Promise<boolean>
+		zoomTo(target : Entity|Array<Entity>|EntityCollection|DataSource|ImageryLayer|Promise<Entity|Array<Entity>|EntityCollection|DataSource|ImageryLayer>, offset? : HeadingPitchRange) : Promise<boolean>
 
 	}
 	export = Viewer
@@ -4947,7 +5394,6 @@ declare module 'cesium/Cesium' {
 	export import Cartesian3 = require('cesium/Core/Cartesian3')
 	export import Cartesian4 = require('cesium/Core/Cartesian4')
 	export import Cartographic = require('cesium/Core/Cartographic')
-	export import Math = require('cesium/Core/CesiumMath')
 	export import CesiumTerrainProvider = require('cesium/Core/CesiumTerrainProvider')
 	export import Clock = require('cesium/Core/Clock')
 	export import ClockRange = require('cesium/Core/ClockRange')
@@ -4957,12 +5403,14 @@ declare module 'cesium/Cesium' {
 	export import DefaultProxy = require('cesium/Core/DefaultProxy')
 	export import defaultValue = require('cesium/Core/defaultValue')
 	export import DeveloperError = require('cesium/Core/DeveloperError')
+	export import DistanceDisplayCondition = require('cesium/Core/DistanceDisplayCondition')
 	export import EasingFunction = require('cesium/Core/EasingFunction')
 	export import Ellipsoid = require('cesium/Core/Ellipsoid')
 	export import Event = require('cesium/Core/Event')
 	export import ExtrapolationType = require('cesium/Core/ExtrapolationType')
 	export import GeographicTilingScheme = require('cesium/Core/GeographicTilingScheme')
 	export import GregorianDate = require('cesium/Core/GregorianDate')
+	export import HeadingPitchRange = require('cesium/Core/HeadingPitchRange')
 	export import InterpolationAlgorithm = require('cesium/Core/InterpolationAlgorithm')
 	export import Intersect = require('cesium/Core/Intersect')
 	export import Interval = require('cesium/Core/Interval')
@@ -4970,6 +5418,7 @@ declare module 'cesium/Cesium' {
 	export import JulianDate = require('cesium/Core/JulianDate')
 	export import LeapSecond = require('cesium/Core/LeapSecond')
 	export import MapProjection = require('cesium/Core/MapProjection')
+	export import Math = require('cesium/Core/Math')
 	export import Matrix3 = require('cesium/Core/Matrix3')
 	export import Matrix4 = require('cesium/Core/Matrix4')
 	export import Occluder = require('cesium/Core/Occluder')
@@ -4984,17 +5433,18 @@ declare module 'cesium/Cesium' {
 	export import ScreenSpaceEventType = require('cesium/Core/ScreenSpaceEventType')
 	export import Spherical = require('cesium/Core/Spherical')
 	export import TerrainData = require('cesium/Core/TerrainData')
-	export import TerrainMesh = require('cesium/Core/TerrainMesh')
 	export import TerrainProvider = require('cesium/Core/TerrainProvider')
 	export import TilingScheme = require('cesium/Core/TilingScheme')
 	export import TimeInterval = require('cesium/Core/TimeInterval')
 	export import TimeIntervalCollection = require('cesium/Core/TimeIntervalCollection')
 	export import TimeStandard = require('cesium/Core/TimeStandard')
 	export import Transforms = require('cesium/Core/Transforms')
+	export import TranslationRotationScale = require('cesium/Core/TranslationRotationScale')
 	export import WebMercatorProjection = require('cesium/Core/WebMercatorProjection')
 	export import WebMercatorTilingScheme = require('cesium/Core/WebMercatorTilingScheme')
 	export import BillboardGraphics = require('cesium/DataSources/BillboardGraphics')
 	export import BoxGraphics = require('cesium/DataSources/BoxGraphics')
+	export import CompositeEntityCollection = require('cesium/DataSources/CompositeEntityCollection')
 	export import CorridorGraphics = require('cesium/DataSources/CorridorGraphics')
 	export import CustomDataSource = require('cesium/DataSources/CustomDataSource')
 	export import CylinderGraphics = require('cesium/DataSources/CylinderGraphics')
@@ -5006,6 +5456,7 @@ declare module 'cesium/Cesium' {
 	export import EllipseGraphics = require('cesium/DataSources/EllipseGraphics')
 	export import EllipsoidGraphics = require('cesium/DataSources/EllipsoidGraphics')
 	export import Entity = require('cesium/DataSources/Entity')
+	export import EntityCluster = require('cesium/DataSources/EntityCluster')
 	export import EntityCollection = require('cesium/DataSources/EntityCollection')
 	export import EntityView = require('cesium/DataSources/EntityView')
 	export import LabelGraphics = require('cesium/DataSources/LabelGraphics')
@@ -5018,6 +5469,7 @@ declare module 'cesium/Cesium' {
 	export import PolylineVolumeGraphics = require('cesium/DataSources/PolylineVolumeGraphics')
 	export import PositionProperty = require('cesium/DataSources/PositionProperty')
 	export import Property = require('cesium/DataSources/Property')
+	export import PropertyBag = require('cesium/DataSources/PropertyBag')
 	export import RectangleGraphics = require('cesium/DataSources/RectangleGraphics')
 	export import SampledPositionProperty = require('cesium/DataSources/SampledPositionProperty')
 	export import TimeIntervalCollectionProperty = require('cesium/DataSources/TimeIntervalCollectionProperty')
@@ -5026,13 +5478,15 @@ declare module 'cesium/Cesium' {
 	export import Camera = require('cesium/Scene/Camera')
 	export import CameraEventType = require('cesium/Scene/CameraEventType')
 	export import CullingVolume = require('cesium/Scene/CullingVolume')
+	export import Fog = require('cesium/Scene/Fog')
 	export import FrameRateMonitor = require('cesium/Scene/FrameRateMonitor')
 	export import Globe = require('cesium/Scene/Globe')
-	export import HeadingPitchRange = require('cesium/Scene/HeadingPitchRange')
+	export import HeightReference = require('cesium/Scene/HeightReference')
 	export import ImageryLayer = require('cesium/Scene/ImageryLayer')
 	export import ImageryLayerCollection = require('cesium/Scene/ImageryLayerCollection')
 	export import ImageryLayerFeatureInfo = require('cesium/Scene/ImageryLayerFeatureInfo')
 	export import ImageryProvider = require('cesium/Scene/ImageryProvider')
+	export import MapMode2D = require('cesium/Scene/MapMode2D')
 	export import Model = require('cesium/Scene/Model')
 	export import ModelAnimation = require('cesium/Scene/ModelAnimation')
 	export import ModelAnimationCollection = require('cesium/Scene/ModelAnimationCollection')
@@ -5046,6 +5500,8 @@ declare module 'cesium/Cesium' {
 	export import Scene = require('cesium/Scene/Scene')
 	export import SceneMode = require('cesium/Scene/SceneMode')
 	export import ScreenSpaceCameraController = require('cesium/Scene/ScreenSpaceCameraController')
+	export import ShadowMap = require('cesium/Scene/ShadowMap')
+	export import ShadowMode = require('cesium/Scene/ShadowMode')
 	export import SkyAtmosphere = require('cesium/Scene/SkyAtmosphere')
 	export import SkyBox = require('cesium/Scene/SkyBox')
 	export import Sun = require('cesium/Scene/Sun')
@@ -5077,9 +5533,9 @@ declare module 'cesium/Cesium' {
 	export import Timeline = require('cesium/Widgets/Timeline/Timeline')
 	export import Viewer = require('cesium/Widgets/Viewer/Viewer')
 	export import viewerCesiumInspectorMixin = require('cesium/Widgets/Viewer/viewerCesiumInspectorMixin')
+	export import VRButton = require('cesium/Widgets/VRButton/VRButton')
+	export import VRButtonViewModel = require('cesium/Widgets/VRButton/VRButtonViewModel')
 
 }
 declare module 'cesium' {
-	import main = require('cesium/Cesium');
-	export = main;
-}
+	}

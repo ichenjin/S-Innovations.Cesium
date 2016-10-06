@@ -12,7 +12,8 @@
     "grunt": "^0.4.5"
   },
   "devDependencies": {
-    "dts-generator": "^1.5.0",
+    "typescript": "1.8.0",
+    "dts-generator": "1.7.0",
     "grunt": "^0.4.5"
   }
 }

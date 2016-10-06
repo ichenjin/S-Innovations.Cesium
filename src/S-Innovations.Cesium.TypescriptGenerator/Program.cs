@@ -249,8 +249,10 @@ namespace SInnovations.Cesium.TypescriptGenerator
             Console.WriteLine($"Dowloadinging {url}");
             HtmlDocument doc = GetDocument(url);
 
-            var sourceLinkNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main""]/section/article/div/dd/dl/div") ?? doc.DocumentNode.SelectSingleNode(@"//*[@id=""main""]/section/article/div/dl/div");
-            var source = sourceLinkNode.SelectSingleNode(".//a").InnerText.Substring(0, sourceLinkNode.SelectSingleNode(".//a").InnerText.LastIndexOf(","));
+            //var sourceLinkNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main""]/section/article/div/dd/dl/div") ?? doc.DocumentNode.SelectSingleNode(@"//*[@id=""main""]/section/article/div/dl/div");
+            var sourceLinkNode = doc.DocumentNode.SelectSingleNode(@"(//*[@class=""source-link rightLinks""])[1]");
+            var sourceLinkText = sourceLinkNode.SelectSingleNode(".//a").InnerText;
+            var source = sourceLinkText.Substring(0, sourceLinkText.LastIndexOf(" "));
             Console.WriteLine($"Source : {source}");
 
             var classdt = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main""]/section/article/div/dt");
