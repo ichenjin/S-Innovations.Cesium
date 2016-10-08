@@ -344,38 +344,38 @@ namespace SInnovations.Cesium.TypescriptGenerator
         {
             Options.BaseUrl = "https://cesiumjs.org/Cesium/Build/Documentation/";
 
-            //Options.Class.Add("Viewer");
-            //Options.Class.Add("DefaultProxy");
-            //Options.Class.Add("CesiumTerrainProvider");
-            //Options.Class.Add("CzmlDataSource");
-            //Options.Class.Add("EntityView");
-            //Options.Class.Add("ScreenSpaceEventType");
-            //Options.Class.Add("TimeIntervalCollectionProperty");
-            //Options.Class.Add("DeveloperError");
-            //Options.Class.Add("Transforms");
-            //Options.Class.Add("defaultValue");
-            //Options.Class.Add("isArray");
-            //Options.Class.Add("requestAnimationFrame");
-            //Options.Class.Add("TerrainProvider");
-            //Options.Class.Add("CesiumMath");
-            //Options.Class.Add("WebMapTileServiceImageryProvider");
-            //Options.Class.Add("WebMercatorTilingScheme");
-            //Options.Class.Add("WebMercatorProjection");
-            //Options.Class.Add("SampledPositionProperty");
-            //Options.Class.Add("VelocityOrientationProperty");
-            //Options.Class.Add("Model");
-            //Options.Class.Add("viewerCesiumInspectorMixin");
-            //Options.Class.Add("BingMapsApi");
-            //Options.Class.Add("FrameRateMonitor");
-            //Options.Class.Add("ConstantPositionProperty");
+            Options.Class.Add("Viewer");
+            Options.Class.Add("DefaultProxy");
+            Options.Class.Add("CesiumTerrainProvider");
+            Options.Class.Add("CzmlDataSource");
+            Options.Class.Add("EntityView");
+            Options.Class.Add("ScreenSpaceEventType");
+            Options.Class.Add("TimeIntervalCollectionProperty");
+            Options.Class.Add("DeveloperError");
+            Options.Class.Add("Transforms");
+            Options.Class.Add("defaultValue");
+            Options.Class.Add("isArray");
+            Options.Class.Add("requestAnimationFrame");
+            Options.Class.Add("TerrainProvider");
+            Options.Class.Add("CesiumMath");
+            Options.Class.Add("WebMapTileServiceImageryProvider");
+            Options.Class.Add("WebMercatorTilingScheme");
+            Options.Class.Add("WebMercatorProjection");
+            Options.Class.Add("SampledPositionProperty");
+            Options.Class.Add("VelocityOrientationProperty");
+            Options.Class.Add("Model");
+            Options.Class.Add("viewerCesiumInspectorMixin");
+            Options.Class.Add("BingMapsApi");
+            Options.Class.Add("FrameRateMonitor");
+            Options.Class.Add("ConstantPositionProperty");
 
-            var url = $"{Options.BaseUrl.TrimEnd('/')}/index.html";
-            var doc = GetDocument(url);
-            var nodes = doc.DocumentNode.SelectNodes("//ul[@id='ClassList']/li/a");
-            foreach (var node in nodes)
-            {
-                Options.Class.Add(node.InnerText.Trim());
-            }
+            //var url = $"{Options.BaseUrl.TrimEnd('/')}/index.html";
+            //var doc = GetDocument(url);
+            //var nodes = doc.DocumentNode.SelectNodes("//ul[@id='ClassList']/li/a");
+            //foreach (var node in nodes)
+            //{
+            //    Options.Class.Add(node.InnerText.Trim());
+            //}
         }
 
         static string ExtractCLass(string url)
@@ -465,11 +465,12 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 var extends = GetClassExtents(signatureName, doc);
                 dependencies.AddRange(extends.dependencies);
                 extends.part = extractDependencies(dependencies, extends.part);
-                WriteDependencies(signatureName, dependencies, writer, methods, members, source);
+                //WriteDependencies(signatureName, dependencies, writer, methods, members, source);
 
                 var typeDef = classIsInterface ? "interface" : "class";
 
-                writer.WriteLine($"{typeDef} {signatureName} {extends.part}");
+                //writer.WriteLine($"{typeDef} {signatureName} {extends.part}");
+                writer.WriteLine($"export {typeDef} {signatureName} {extends.part}");
                 writer.WriteLine("{");
                 if (!classIsInterface)
                     writer.WriteLine($"\tconstructor{signature};");
@@ -477,7 +478,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 writer.WriteLine();
                 writer.WriteLine(methods.part);
                 writer.WriteLine("}");
-                writer.WriteLine($"export = {signatureName}");
+                //writer.WriteLine($"export = {signatureName}");
             }
 
 
