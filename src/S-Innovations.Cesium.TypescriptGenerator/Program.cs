@@ -21,6 +21,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             _name = name;
             _source = source;
         }
+
         public Dictionary<string, string> GetSignatureTypes(HtmlNode node)
         {
             var signatureParams = node.SelectSingleNode(@".//table[@class='params']/tbody");
@@ -28,9 +29,26 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 return new Dictionary<string, string>();
 
             var rows = signatureParams.Elements("tr");
-            return rows.ToDictionary(
-                VariableNameResolver,
-                VariableTypeResolver);
+            var result = new Dictionary<string, string>();
+            foreach (var row in rows)
+            {
+                var name = VariableNameResolver(row);
+                var type = VariableTypeResolver(row);
+
+                // handle duplicated names
+                // for example: RectangleGeometryUpdater.createDynamicUpdater
+
+                int no = 0;
+                var tempName = name;
+                while (result.ContainsKey(tempName))
+                {
+                    no++;
+                    tempName = $"{name}_{no}";
+                }
+                result.Add(tempName, type);
+            }
+
+            return result;
 
         }
         private string VariableNameResolver(HtmlNode row)
@@ -131,7 +149,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
         };
         static Dictionary<string, string> typeMaps = new Dictionary<string, string>
         {
-            {"Cesium.Property", "Cesium.Property|string" }
+            {"Cesium.Property", "Cesium.Property|any" }
         };
 
         static Dictionary<string, string> classToPath = new Dictionary<string, string>();
@@ -258,32 +276,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             if (Directory.Exists("tempOut"))
                 Directory.Delete("tempOut", true);
 
-            Options.BaseUrl = "https://cesiumjs.org/Cesium/Build/Documentation/";
-            Options.Class.Add("Viewer");
-            Options.Class.Add("DefaultProxy");
-            Options.Class.Add("CesiumTerrainProvider");
-            Options.Class.Add("CzmlDataSource");
-            Options.Class.Add("EntityView");
-            Options.Class.Add("ScreenSpaceEventType");
-            Options.Class.Add("TimeIntervalCollectionProperty");
-            Options.Class.Add("DeveloperError");
-            Options.Class.Add("Transforms");
-            Options.Class.Add("defaultValue");
-            Options.Class.Add("isArray");
-            Options.Class.Add("requestAnimationFrame");
-            Options.Class.Add("TerrainProvider");
-            Options.Class.Add("CesiumMath");
-            Options.Class.Add("WebMapTileServiceImageryProvider");
-            Options.Class.Add("WebMercatorTilingScheme");
-            Options.Class.Add("WebMercatorProjection");
-            Options.Class.Add("SampledPositionProperty");
-            Options.Class.Add("VelocityOrientationProperty");
-            Options.Class.Add("Model");
-            Options.Class.Add("viewerCesiumInspectorMixin");
-            Options.Class.Add("BingMapsApi");
-            Options.Class.Add("FrameRateMonitor");
-
-            Options.Class.Add("SampledPositionProperty");
+            FillOptions();
 
             // Options.OutputPath = @"C:\dev\AscendXYZ Portal\typings\Cesium.d.ts";
 
@@ -346,6 +339,44 @@ namespace SInnovations.Cesium.TypescriptGenerator
             Directory.Move("tempOut", "../../../../artifacts/src");
         }
         static Dictionary<string, string> urlsToClass = new Dictionary<string, string>();
+
+        static void FillOptions()
+        {
+            Options.BaseUrl = "https://cesiumjs.org/Cesium/Build/Documentation/";
+
+            //Options.Class.Add("Viewer");
+            //Options.Class.Add("DefaultProxy");
+            //Options.Class.Add("CesiumTerrainProvider");
+            //Options.Class.Add("CzmlDataSource");
+            //Options.Class.Add("EntityView");
+            //Options.Class.Add("ScreenSpaceEventType");
+            //Options.Class.Add("TimeIntervalCollectionProperty");
+            //Options.Class.Add("DeveloperError");
+            //Options.Class.Add("Transforms");
+            //Options.Class.Add("defaultValue");
+            //Options.Class.Add("isArray");
+            //Options.Class.Add("requestAnimationFrame");
+            //Options.Class.Add("TerrainProvider");
+            //Options.Class.Add("CesiumMath");
+            //Options.Class.Add("WebMapTileServiceImageryProvider");
+            //Options.Class.Add("WebMercatorTilingScheme");
+            //Options.Class.Add("WebMercatorProjection");
+            //Options.Class.Add("SampledPositionProperty");
+            //Options.Class.Add("VelocityOrientationProperty");
+            //Options.Class.Add("Model");
+            //Options.Class.Add("viewerCesiumInspectorMixin");
+            //Options.Class.Add("BingMapsApi");
+            //Options.Class.Add("FrameRateMonitor");
+            //Options.Class.Add("ConstantPositionProperty");
+
+            var url = $"{Options.BaseUrl.TrimEnd('/')}/index.html";
+            var doc = GetDocument(url);
+            var nodes = doc.DocumentNode.SelectNodes("//ul[@id='ClassList']/li/a");
+            foreach (var node in nodes)
+            {
+                Options.Class.Add(node.InnerText.Trim());
+            }
+        }
 
         static string ExtractCLass(string url)
         {
