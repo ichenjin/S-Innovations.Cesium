@@ -16,7 +16,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
     {
         private string _name;
         private string _source;
-        public OptionsWriter(string name,string source)
+        public OptionsWriter(string name, string source)
         {
             _name = name;
             _source = source;
@@ -56,20 +56,20 @@ namespace SInnovations.Cesium.TypescriptGenerator
 
                 var props = GetSignatureTypes(row.SelectSingleNode(@".//td[contains(@class,'description')]"));
 
-                
-                
+
+
 
                 if (props.Keys.Any())
                 {
-                    
+
                     //   var type = "opt_" + Program.CalculateMD5Hash(string.Join("", props.Keys.OrderBy(k => k)));
                     var type = this._name + "Options";
                     var dependencies = new List<string>();
 
-                    var writer = Program.GetWriter(type,_source);
+                    var writer = Program.GetWriter(type, _source);
                     if (writer != null)
                     {
-                       
+
 
                         props = props.ToDictionary(k => k.Key, v => Program.extractDependencies(dependencies, v.Value));
 
@@ -81,7 +81,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                         writer.WriteLine("{");
                         foreach (var prop in props)
                         {
-                           
+
                             writer.WriteLine($"\t{prop.Key}: {prop.Value};");
 
                         }
@@ -104,6 +104,16 @@ namespace SInnovations.Cesium.TypescriptGenerator
         static Options Options = new Options();
 
         static Dictionary<string, StreamWriter> files = new Dictionary<string, StreamWriter>();
+
+        static HashSet<string> interfaces = new HashSet<string>()
+        {
+            "Packable",
+            "PackableForInterpolation",
+            "Property",
+            "PositionProperty",
+            "DataSource",
+        };
+
         static Dictionary<string, string> classExtents = new Dictionary<string, string>
         {
             { "CzmlDataSource", "extends Cesium.DataSource" },
@@ -125,13 +135,113 @@ namespace SInnovations.Cesium.TypescriptGenerator
         };
 
         static Dictionary<string, string> classToPath = new Dictionary<string, string>();
+
+        static bool ClassIsInterface(string signatureName, HtmlDocument doc)
+        {
+            if (interfaces.Contains(signatureName))
+                return true;
+
+            var descNode = doc.DocumentNode.SelectSingleNode("//div[@class='container-overview']/dd/div[@class='description']");
+            if (descNode == null)
+                return false;
+
+            var text = descNode.InnerText.Trim();
+            if (text.StartsWith("The interface for ") || text.StartsWith("Static interface for ") || text.StartsWith("Defines the interface for "))
+            {
+                interfaces.Add(signatureName);
+                return true;
+            }
+
+            return false;
+        }
+
+        static ExtentsResult GetClassExtents(string signatureName)
+        {
+            var extends = classExtents.ContainsKey(signatureName) ? classExtents[signatureName] : "";
+            return new ExtentsResult
+            {
+                part = extends,
+                dependencies = new List<string>()
+            };
+        }
+
+        class ExtentsResult
+        {
+            public string part { get; set; }
+            public List<string> dependencies;
+        }
+
+        static ExtentsResult GetClassExtents(string signatureName, HtmlDocument doc)
+        {
+            var descNode = doc.DocumentNode.SelectSingleNode("//div[@class='container-overview']/dd/div[@class='description']");
+            if (descNode == null)
+                return GetClassExtents(signatureName);
+
+            List<string> classes = new List<string>();
+            var childNodes = descNode.ChildNodes;
+
+            while (true)
+            {
+                if (childNodes.Count < 2)
+                    break;
+                if (childNodes[0].InnerText.Trim() != "A")
+                    break;
+                var code1 = childNodes[1].SelectSingleNode("code");
+                if (code1 == null)
+                    break;
+
+                var class1 = code1.InnerText.Trim();
+                var url = $"{Options.BaseUrl.TrimEnd('/')}/{class1}.html";
+                ExtractCLass(url);
+                classes.Add(class1);
+
+                if (childNodes.Count < 4)
+                    break;
+
+                if (childNodes[2].InnerText.Trim() != "which is also a")
+                    break;
+
+                var code2 = childNodes[3].SelectSingleNode("code");
+                if (code2 == null)
+                    break;
+
+                var class2 = code2.InnerText.Trim();
+                url = $"{Options.BaseUrl.TrimEnd('/')}/{class2}.html";
+                ExtractCLass(url);
+                classes.Add(class2);
+
+                break;
+            }
+
+            switch (classes.Count)
+            {
+                case 0:
+                    return GetClassExtents(signatureName);
+                case 1:
+                    return new ExtentsResult
+                    {
+                        part = $"implements {classes[0]}",
+                        dependencies = classes
+                    };
+                case 2:
+                    return new ExtentsResult
+                    {
+                        part = $"extends {classes[0]} implements {classes[1]}",
+                        dependencies = classes
+                    };
+                default:
+                    throw new Exception("unbelievable");
+            }
+
+        }
+
         public static StreamWriter GetWriter(string className, string source = ".")
         {
-            var filePath = Path.Combine("tempOut", Path.GetDirectoryName(source) , className);
+            var filePath = Path.Combine("tempOut", Path.GetDirectoryName(source), className);
 
             if (!string.IsNullOrEmpty(Path.GetDirectoryName(filePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            
+
             if (File.Exists($"{filePath}.d.ts"))
                 return null;
 
@@ -139,16 +249,14 @@ namespace SInnovations.Cesium.TypescriptGenerator
             {
                 files[filePath] = new StreamWriter(new FileStream($"{filePath}.d.ts", FileMode.Create));
             }
-            classToPath[className] = Path.Combine(Path.GetDirectoryName(source) , className);
+            classToPath[className] = Path.Combine(Path.GetDirectoryName(source), className);
             return files[filePath];
         }
         static void Main(string[] args)
         {
 
-
-
-            if(Directory.Exists("tempOut"))
-                Directory.Delete("tempOut",true);
+            if (Directory.Exists("tempOut"))
+                Directory.Delete("tempOut", true);
 
             Options.BaseUrl = "https://cesiumjs.org/Cesium/Build/Documentation/";
             Options.Class.Add("Viewer");
@@ -175,6 +283,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             Options.Class.Add("BingMapsApi");
             Options.Class.Add("FrameRateMonitor");
 
+            Options.Class.Add("SampledPositionProperty");
 
             // Options.OutputPath = @"C:\dev\AscendXYZ Portal\typings\Cesium.d.ts";
 
@@ -197,7 +306,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
 
                 var when = GetWriter("when");
                 when.WriteLine("import Promise = require(\"./Promise\");");
-                when.WriteLine("function when<T>(promise:Promise<T>, succes:(result)=>void, fail:(result)=>void) : void");         
+                when.WriteLine("function when<T>(promise:Promise<T>, succes:(result)=>void, fail:(result)=>void) : void");
                 when.WriteLine("export = when;");
 
                 //var bingMapApi = GetWriter("BingMapApi");
@@ -206,18 +315,16 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 //bingMapApi.WriteLine("}");
 
                 var cesium = GetWriter("Cesium");
-                foreach (var cls in Directory.GetFiles("tempOut","*.*",SearchOption.AllDirectories)
-                    .Select(f=>Path.GetFileName(f).Substring(0, Path.GetFileName(f).Length-5))
-                    .Where(f=>!f.EndsWith("Options"))
-                    .Where(f=>f!="Cesium")) {
+                foreach (var cls in Directory.GetFiles("tempOut", "*.*", SearchOption.AllDirectories)
+                    .Select(f => Path.GetFileName(f).Substring(0, Path.GetFileName(f).Length - 5))
+                    .Where(f => !f.EndsWith("Options"))
+                    .Where(f => f != "Cesium"))
+                {
 
-                    WriteDependency(cesium, "Cesium.d.ts", cls,true, cls == "CesiumMath" ? "Math":null);
+                    WriteDependency(cesium, "Cesium.d.ts", cls, true, cls == "CesiumMath" ? "Math" : null);
                 }
-
-             
-
-
             }
+
             foreach (var writer in files.Values)
             {
                 writer.Dispose();
@@ -231,7 +338,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 File.AppendAllLines(local, File.ReadAllLines(file));
             }
             File.AppendAllLines(local, new string[] { "}", " export = Cesium;", " }" });
-            if(!string.IsNullOrEmpty(Options.OutputPath))
+            if (!string.IsNullOrEmpty(Options.OutputPath))
                 File.Copy(local, Options.OutputPath, true);
             if (Directory.Exists("../../../../artifacts/src"))
                 Directory.Delete("../../../../artifacts/src", true);
@@ -263,6 +370,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             StreamWriter writer = null;
             if (classdt != null)
             {
+                GetClassExtents(signatureName, doc);
                 var ctor = classdt.SelectSingleNode(".//div/h4");
                 signatureName = ctor.GetAttributeValue("id", null);
 
@@ -271,12 +379,12 @@ namespace SInnovations.Cesium.TypescriptGenerator
 
                 writer = GetWriter(signatureName, source);
 
-                var optionsParser = new OptionsWriter(signatureName,source);
+                var optionsParser = new OptionsWriter(signatureName, source);
 
                 var signatureParams = optionsParser.GetSignatureTypes(classdt.SelectSingleNode(".//following-sibling::dd"));
                 var signatureNode = ctor.SelectSingleNode(@".//span[@class=""signature"" ]");
                 signature = signatureOverrides.ContainsKey(signatureName) ? signatureOverrides[signatureName] : signatureNode.InnerText;
-              
+
 
                 var signatureReturnNode = ctor.SelectSingleNode(@".//span[@class=""type-signature returnType"" ]");
                 if (signatureReturnNode != null)
@@ -293,7 +401,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                     {
                         var name = ctorParam.Key;
                         var types = ctorParam.Value.Replace("Object", "any");
-                        
+
                         types = extractDependencies(dependencies, types);
 
 
@@ -303,47 +411,37 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 }
             }
 
-            if(writer == null)
-                writer = GetWriter(signatureName, source); 
+            if (writer == null)
+                writer = GetWriter(signatureName, source);
 
 
-            var methods = ParseAndWriteMethods(doc, source);
-            
-           
+            var classIsInterface = ClassIsInterface(signatureName, doc);
+            var methods = ParseAndWriteMethods(doc, source, classIsInterface);
+
+
 
             if (Char.IsLower(signatureName.First()))
             {
                 var members = ParseAndWriteMembers(doc, true);
-                WriteDependencies(signatureName, dependencies, writer, methods, members,source);
-
-                //var interfaceName = $"{signatureName.Substring(0, 1).ToUpper()}{signatureName.Substring(1)}Static";
-
-                //writer.WriteLine($"interface {interfaceName}");
-                //writer.WriteLine("{");
-                //writer.WriteLine($"\t{signature}{signatureReturnType};");
-                //writer.WriteLine(members.part);
-                //writer.WriteLine();
-                //writer.WriteLine(methods.part);
-                //writer.WriteLine("}");
-                //  writer.WriteLine($"export var {signatureName} : {interfaceName}");
-                
+                WriteDependencies(signatureName, dependencies, writer, methods, members, source);
 
                 writer.WriteLine($"function {signatureName}{signature}{signatureReturnType};");
                 writer.WriteLine($"export = {signatureName}");
             }
             else
             {
+                var members = ParseAndWriteMembers(doc, classIsInterface);
+                var extends = GetClassExtents(signatureName, doc);
+                dependencies.AddRange(extends.dependencies);
+                extends.part = extractDependencies(dependencies, extends.part);
+                WriteDependencies(signatureName, dependencies, writer, methods, members, source);
 
-                var members = ParseAndWriteMembers(doc, false);
-                var extends = classExtents.ContainsKey(signatureName) ? classExtents[signatureName] : "";
-                extends = extractDependencies(dependencies, extends);
-                WriteDependencies(signatureName, dependencies, writer, methods, members,source);
+                var typeDef = classIsInterface ? "interface" : "class";
 
-              
-                
-                writer.WriteLine($"class {signatureName} {extends}");
+                writer.WriteLine($"{typeDef} {signatureName} {extends.part}");
                 writer.WriteLine("{");
-                writer.WriteLine($"\tconstructor{signature};");
+                if (!classIsInterface)
+                    writer.WriteLine($"\tconstructor{signature};");
                 writer.WriteLine(members.part);
                 writer.WriteLine();
                 writer.WriteLine(methods.part);
@@ -375,7 +473,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
 
             var test = new Uri(Path.Combine(Directory.GetCurrentDirectory(), "tempOut", currentPath)).MakeRelativeUri(new Uri(Path.Combine(Directory.GetCurrentDirectory(), "tempOut", path)));
 
-            writer.WriteLine($"{(export?"export ":"")}import {(localName==null? dep : localName)} = require(\"./{test}\")");
+            writer.WriteLine($"{(export ? "export " : "")}import {(localName == null ? dep : localName)} = require(\"./{test}\")");
         }
 
         private static HtmlDocument GetDocument(string url)
@@ -431,25 +529,25 @@ namespace SInnovations.Cesium.TypescriptGenerator
         public static string extractDependencies(List<string> dependencies, string typeList)
         {
 
-            var type= Regex.Replace(typeList, @"Cesium\.([a-zA-Z]+[a-zA-Z0-9\\_]*)", (m) =>
-            {
-                if (m.Success)
-                {
-                    dependencies.Add(m.Groups[1].Value);
-                    return m.Groups[1].Value;
-                }
-                return m.Value;
-            });
+            var type = Regex.Replace(typeList, @"Cesium\.([a-zA-Z]+[a-zA-Z0-9\\_]*)", (m) =>
+             {
+                 if (m.Success)
+                 {
+                     dependencies.Add(m.Groups[1].Value);
+                     return m.Groups[1].Value;
+                 }
+                 return m.Value;
+             });
 
-            if(type.Contains("Promise"))
+            if (type.Contains("Promise"))
                 dependencies.Add("Promise");
 
 
             return type;
-         
+
         }
 
-        private static MethodResult ParseAndWriteMethods(HtmlDocument doc,string source)
+        private static MethodResult ParseAndWriteMethods(HtmlDocument doc, string source, bool isInterface = false)
         {
             var dependencies = new List<string>();
             var writer = new StringWriter();
@@ -457,7 +555,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             writer.WriteLine($"\t//{selector}");
             var a = doc.DocumentNode.SelectSingleNode($@"//*[@id=""main""]/section/article/h3[text() = '{selector}']/following-sibling::dl");
             if (a == null)
-                return new MethodResult { part = writer.ToString(), dependencies=new List<string>() };
+                return new MethodResult { part = writer.ToString(), dependencies = new List<string>() };
             foreach (var dt in a.SelectNodes(".//dt"))
             {
                 var method = dt.SelectSingleNode(".//div/h4");
@@ -466,7 +564,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 var staticMember = method.SelectSingleNode(".//span[@class='type-signature attribute-static']");
                 var signature = method.SelectSingleNode(".//span[@class='signature']").InnerText;
                 var type = method.SelectSingleNode(".//span[@class='type-signature returnType']");
-                var typeList =TypeReader(type);
+                var typeList = TypeReader(type);
                 typeList = extractDependencies(dependencies, typeList);
 
                 var optionsParser = new OptionsWriter(memberName, source);
@@ -482,7 +580,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                         if (signatureParams.ContainsKey(s))
                         {
 
-                            return $"{s + (optionalFound ? "?" : "")} : { extractDependencies(dependencies,signatureParams[s].Replace("Object", "any"))}";
+                            return $"{s + (optionalFound ? "?" : "")} : { extractDependencies(dependencies, signatureParams[s].Replace("Object", "any"))}";
                         }
                         if (signatureParams.ContainsKey(s + "?"))
                         {
@@ -494,14 +592,14 @@ namespace SInnovations.Cesium.TypescriptGenerator
                     }))})";
 
 
-                writer.WriteLine($"\t{(staticMember == null ? "" : "static ")}{memberName}{signature.Replace("arguments", "args")} : {typeList}");
+                writer.WriteLine($"\t{(staticMember != null && !isInterface ? "static " : "")}{memberName}{signature.Replace("arguments", "args")} : {typeList}");
 
             }
 
             return new MethodResult { part = writer.ToString(), dependencies = dependencies.Distinct().ToList() };
         }
 
-       
+
         public static string CalculateMD5Hash(string input)
         {
             // step 1, calculate MD5 hash from input
@@ -517,7 +615,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             }
             return sb.ToString();
         }
-      
+
         public static string TypeReader(HtmlNode typeNode)
         {
             if (typeNode == null)
@@ -533,8 +631,8 @@ namespace SInnovations.Cesium.TypescriptGenerator
             var links = typeNode.SelectNodes(@".//a");
             if (links != null)
             {
-         
-                if(links.Count > 2)
+
+                if (links.Count > 2)
                 {
 
                 }
@@ -553,17 +651,17 @@ namespace SInnovations.Cesium.TypescriptGenerator
                         {
                             return TypeReplacer("Cesium." + className);
                         }
-                        var old = idx+1;
-                        idx = type.IndexOf(className,idx+1);
-                        type = type.Substring(0, idx ) + "Cesium." + className + type.Substring(idx + className.Length);
+                        var old = idx + 1;
+                        idx = type.IndexOf(className, idx + 1);
+                        type = type.Substring(0, idx) + "Cesium." + className + type.Substring(idx + className.Length);
                         idx += 7;
 
-            //            type = type.Replace(className, "Cesium." + className);
+                        //            type = type.Replace(className, "Cesium." + className);
 
                     }
                     catch (Exception ex)
                     {
-                       return "any";
+                        return "any";
                     }
 
 
@@ -585,7 +683,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             {
                 c += b.Count(ch => ch == '<') - b.Count(ch => ch == '>');
 
-                combine |= c!=0;
+                combine |= c != 0;
                 if (combine)
                 {
                     value += (value.Length > 0 ? " | " : "") + b;
@@ -638,6 +736,8 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 case "*": return "any";
                 case "undefined": return "void";
                 case "Array": return "Array<any>";
+                case "Any": return "any";
+                case "Cartesian": return "Cartesian3";
             }
 
             if (string.IsNullOrWhiteSpace(type))
