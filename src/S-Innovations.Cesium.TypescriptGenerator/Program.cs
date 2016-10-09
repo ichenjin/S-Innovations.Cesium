@@ -92,7 +92,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                         props = props.ToDictionary(k => k.Key, v => Program.extractDependencies(dependencies, v.Value));
 
 
-                        Program.WriteDependencies(type, dependencies, writer, null, null, _source);
+                        //Program.WriteDependencies(type, dependencies, writer, null, null, _source);
 
 
                         writer.WriteLine($"interface {type}");
@@ -104,7 +104,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
 
                         }
                         writer.WriteLine("}");
-                        writer.WriteLine($"export = {type}");
+                        //writer.WriteLine($"export = {type}");
 
                     }
 
@@ -307,32 +307,52 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 //bingMapApi.WriteLine("  var defaultKey;");
                 //bingMapApi.WriteLine("}");
 
-                var cesium = GetWriter("Cesium");
-                foreach (var cls in Directory.GetFiles("tempOut", "*.*", SearchOption.AllDirectories)
-                    .Select(f => Path.GetFileName(f).Substring(0, Path.GetFileName(f).Length - 5))
-                    .Where(f => !f.EndsWith("Options"))
-                    .Where(f => f != "Cesium"))
-                {
+                //var cesium = GetWriter("Cesium");
+                //foreach (var cls in Directory.GetFiles("tempOut", "*.*", SearchOption.AllDirectories)
+                //    .Select(f => Path.GetFileName(f).Substring(0, Path.GetFileName(f).Length - 5))
+                //    .Where(f => !f.EndsWith("Options"))
+                //    .Where(f => f != "Cesium"))
+                //{
 
-                    WriteDependency(cesium, "Cesium.d.ts", cls, true, cls == "CesiumMath" ? "Math" : null);
-                }
+                //    WriteDependency(cesium, "Cesium.d.ts", cls, true, cls == "CesiumMath" ? "Math" : null);
+                //}
             }
 
             foreach (var writer in files.Values)
             {
                 writer.Dispose();
             }
-            var local = "Cesium.d.ts";
-            File.AppendAllLines(local, new string[] { @"declare module ""cesium"" {", "module Cesium {" });
-            foreach (var file in Directory.GetFiles(".", "*.d.ts"))
+
+            var outputFile = @"tempOut\Cesium.d.ts";
+            using (StreamWriter writer = new StreamWriter(outputFile, false))
             {
-                if (Path.GetFileName(file) == local)
-                    continue;
-                File.AppendAllLines(local, File.ReadAllLines(file));
+                writer.WriteLine("declare namespace Cesium {");
+
+                foreach (var file in files.Keys)
+                {
+                    using (var reader = new StreamReader($"{file}.d.ts"))
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine(reader.ReadToEnd());
+                    };
+                }
+
+                writer.WriteLine("}");
+                writer.WriteLine("export = Cesium;");
             }
-            File.AppendAllLines(local, new string[] { "}", " export = Cesium;", " }" });
-            if (!string.IsNullOrEmpty(Options.OutputPath))
-                File.Copy(local, Options.OutputPath, true);
+
+            //var local = "Cesium.d.ts";
+            //File.AppendAllLines(local, new string[] { @"declare module ""cesium"" {", "module Cesium {" });
+            //foreach (var file in Directory.GetFiles(".", "*.d.ts"))
+            //{
+            //    if (Path.GetFileName(file) == local)
+            //        continue;
+            //    File.AppendAllLines(local, File.ReadAllLines(file));
+            //}
+            //File.AppendAllLines(local, new string[] { "}", " export = Cesium;", " }" });
+            //if (!string.IsNullOrEmpty(Options.OutputPath))
+            //    File.Copy(local, Options.OutputPath, true);
+
             if (Directory.Exists("../../../../artifacts/src"))
                 Directory.Delete("../../../../artifacts/src", true);
             Thread.Sleep(1000);
@@ -344,38 +364,38 @@ namespace SInnovations.Cesium.TypescriptGenerator
         {
             Options.BaseUrl = "https://cesiumjs.org/Cesium/Build/Documentation/";
 
-            Options.Class.Add("Viewer");
-            Options.Class.Add("DefaultProxy");
-            Options.Class.Add("CesiumTerrainProvider");
-            Options.Class.Add("CzmlDataSource");
-            Options.Class.Add("EntityView");
-            Options.Class.Add("ScreenSpaceEventType");
-            Options.Class.Add("TimeIntervalCollectionProperty");
-            Options.Class.Add("DeveloperError");
-            Options.Class.Add("Transforms");
-            Options.Class.Add("defaultValue");
-            Options.Class.Add("isArray");
-            Options.Class.Add("requestAnimationFrame");
-            Options.Class.Add("TerrainProvider");
-            Options.Class.Add("CesiumMath");
-            Options.Class.Add("WebMapTileServiceImageryProvider");
-            Options.Class.Add("WebMercatorTilingScheme");
-            Options.Class.Add("WebMercatorProjection");
-            Options.Class.Add("SampledPositionProperty");
-            Options.Class.Add("VelocityOrientationProperty");
-            Options.Class.Add("Model");
-            Options.Class.Add("viewerCesiumInspectorMixin");
-            Options.Class.Add("BingMapsApi");
-            Options.Class.Add("FrameRateMonitor");
-            Options.Class.Add("ConstantPositionProperty");
+            //Options.Class.Add("Viewer");
+            //Options.Class.Add("DefaultProxy");
+            //Options.Class.Add("CesiumTerrainProvider");
+            //Options.Class.Add("CzmlDataSource");
+            //Options.Class.Add("EntityView");
+            //Options.Class.Add("ScreenSpaceEventType");
+            //Options.Class.Add("TimeIntervalCollectionProperty");
+            //Options.Class.Add("DeveloperError");
+            //Options.Class.Add("Transforms");
+            //Options.Class.Add("defaultValue");
+            //Options.Class.Add("isArray");
+            //Options.Class.Add("requestAnimationFrame");
+            //Options.Class.Add("TerrainProvider");
+            //Options.Class.Add("CesiumMath");
+            //Options.Class.Add("WebMapTileServiceImageryProvider");
+            //Options.Class.Add("WebMercatorTilingScheme");
+            //Options.Class.Add("WebMercatorProjection");
+            //Options.Class.Add("SampledPositionProperty");
+            //Options.Class.Add("VelocityOrientationProperty");
+            //Options.Class.Add("Model");
+            //Options.Class.Add("viewerCesiumInspectorMixin");
+            //Options.Class.Add("BingMapsApi");
+            //Options.Class.Add("FrameRateMonitor");
+            //Options.Class.Add("ConstantPositionProperty");
 
-            //var url = $"{Options.BaseUrl.TrimEnd('/')}/index.html";
-            //var doc = GetDocument(url);
-            //var nodes = doc.DocumentNode.SelectNodes("//ul[@id='ClassList']/li/a");
-            //foreach (var node in nodes)
-            //{
-            //    Options.Class.Add(node.InnerText.Trim());
-            //}
+            var url = $"{Options.BaseUrl.TrimEnd('/')}/index.html";
+            var doc = GetDocument(url);
+            var nodes = doc.DocumentNode.SelectNodes("//ul[@id='ClassList']/li/a");
+            foreach (var node in nodes)
+            {
+                Options.Class.Add(node.InnerText.Trim());
+            }
         }
 
         static string ExtractCLass(string url)
@@ -454,10 +474,10 @@ namespace SInnovations.Cesium.TypescriptGenerator
             if (Char.IsLower(signatureName.First()))
             {
                 var members = ParseAndWriteMembers(doc, true);
-                WriteDependencies(signatureName, dependencies, writer, methods, members, source);
+                //WriteDependencies(signatureName, dependencies, writer, methods, members, source);
 
                 writer.WriteLine($"function {signatureName}{signature}{signatureReturnType};");
-                writer.WriteLine($"export = {signatureName}");
+                //writer.WriteLine($"export = {signatureName}");
             }
             else
             {
