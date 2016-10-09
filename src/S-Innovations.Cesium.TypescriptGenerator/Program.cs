@@ -102,7 +102,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                             var value = prop.Value;
                             if (value == "Property<any>")
                                 value = "PropertyOrValue<any>";
-                            writer.WriteLine($"\t{prop.Key}: {prop.Value};");
+                            writer.WriteLine($"\t{prop.Key}: {value};");
 
                         }
                         writer.WriteLine("}");
@@ -204,7 +204,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
             {
                 if (childNodes.Count < 2)
                     break;
-                if (childNodes[0].InnerText.Trim() != "A")
+                if (childNodes[0].InnerText.Trim() != "A" && childNodes[0].InnerText.Trim() != "An")
                     break;
                 var code1 = childNodes[1].SelectSingleNode("code");
                 if (code1 == null)
@@ -378,7 +378,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 }
 
                 writer.WriteLine("}");
-                writer.WriteLine("export = Cesium;");
+                writer.WriteLine("declare module \"Cesium\" { export = Cesium; }");
             }
 
         }
