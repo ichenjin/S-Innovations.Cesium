@@ -65,10 +65,6 @@
   <ItemGroup>
     <Content Include="gruntfile.js" />
   </ItemGroup>
-  <ItemGroup>
-    <TypeScriptCompile Include="Scripts\typings\cesium\Cesium.d.ts" />
-    <TypeScriptCompile Include="Scripts\typings\es6-promise\es6-promise.d.ts" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

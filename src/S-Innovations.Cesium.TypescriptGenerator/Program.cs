@@ -95,11 +95,13 @@ namespace SInnovations.Cesium.TypescriptGenerator
                         //Program.WriteDependencies(type, dependencies, writer, null, null, _source);
 
 
-                        writer.WriteLine($"interface {type}");
+                        writer.WriteLine($"export interface {type}");
                         writer.WriteLine("{");
                         foreach (var prop in props)
                         {
-
+                            var value = prop.Value;
+                            if (value == "Property<any>")
+                                value = "PropertyOrValue<any>";
                             writer.WriteLine($"\t{prop.Key}: {prop.Value};");
 
                         }
@@ -149,7 +151,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
         };
         static Dictionary<string, string> typeMaps = new Dictionary<string, string>
         {
-            {"Cesium.Property", "Cesium.Property|any" }
+            {"Cesium.Property", "Cesium.Property<any>" }
         };
 
         static Dictionary<string, string> classToPath = new Dictionary<string, string>();
@@ -236,17 +238,25 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 case 0:
                     return GetClassExtents(signatureName);
                 case 1:
-                    return new ExtentsResult
                     {
-                        part = $"implements {classes[0]}",
-                        dependencies = classes
-                    };
+                        if (classes[0] == "Property")
+                            classes[0] = "Property<any>";
+                        return new ExtentsResult
+                        {
+                            part = $"implements {classes[0]}",
+                            dependencies = classes
+                        };
+                    }
                 case 2:
-                    return new ExtentsResult
                     {
-                        part = $"extends {classes[0]} implements {classes[1]}",
-                        dependencies = classes
-                    };
+                        if (classes[1] == "Property")
+                            classes[1] = "Property<any>";
+                        return new ExtentsResult
+                        {
+                            part = $"extends {classes[0]} implements {classes[1]}",
+                            dependencies = classes
+                        };
+                    }
                 default:
                     throw new Exception("unbelievable");
             }
@@ -289,18 +299,18 @@ namespace SInnovations.Cesium.TypescriptGenerator
                     ExtractCLass(url);
                 }
 
-                var promish = GetWriter("Promise");
-                promish.WriteLine("class Promise<T>");
-                promish.WriteLine("{");
-                promish.WriteLine("constructor(doneHandler?:(obj:T)=>void,errorHandler?:(obj:any)=>void)");
-                promish.WriteLine("then(result:T);");
-                promish.WriteLine("}");
-                promish.WriteLine("export = Promise");
+                //var promish = GetWriter("Promise");
+                //promish.WriteLine("class Promise<T>");
+                //promish.WriteLine("{");
+                //promish.WriteLine("constructor(doneHandler?:(obj:T)=>void,errorHandler?:(obj:any)=>void)");
+                //promish.WriteLine("then(result:T);");
+                //promish.WriteLine("}");
+                //promish.WriteLine("export = Promise");
 
-                var when = GetWriter("when");
-                when.WriteLine("import Promise = require(\"./Promise\");");
-                when.WriteLine("function when<T>(promise:Promise<T>, succes:(result)=>void, fail:(result)=>void) : void");
-                when.WriteLine("export = when;");
+                //var when = GetWriter("when");
+                //when.WriteLine("import Promise = require(\"./Promise\");");
+                //when.WriteLine("function when<T>(promise:Promise<T>, succes:(result)=>void, fail:(result)=>void) : void");
+                //when.WriteLine("export = when;");
 
                 //var bingMapApi = GetWriter("BingMapApi");
                 //bingMapApi.WriteLine("  export module BingMapsApi {");
@@ -323,24 +333,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 writer.Dispose();
             }
 
-            var outputFile = @"tempOut\Cesium.d.ts";
-            using (StreamWriter writer = new StreamWriter(outputFile, false))
-            {
-                writer.WriteLine("declare namespace Cesium {");
-
-                foreach (var file in files.Keys)
-                {
-                    using (var reader = new StreamReader($"{file}.d.ts"))
-                    {
-                        writer.WriteLine();
-                        writer.WriteLine(reader.ReadToEnd());
-                    };
-                }
-
-                writer.WriteLine("}");
-                writer.WriteLine("export = Cesium;");
-            }
-
+            MergeOutput(files.Keys);
             //var local = "Cesium.d.ts";
             //File.AppendAllLines(local, new string[] { @"declare module ""cesium"" {", "module Cesium {" });
             //foreach (var file in Directory.GetFiles(".", "*.d.ts"))
@@ -359,6 +352,36 @@ namespace SInnovations.Cesium.TypescriptGenerator
             Directory.Move("tempOut", "../../../../artifacts/src");
         }
         static Dictionary<string, string> urlsToClass = new Dictionary<string, string>();
+
+        static void MergeOutput(IEnumerable<string> files)
+        {
+            var outputFile = @"tempOut\Cesium.d.ts";
+            using (StreamWriter writer = new StreamWriter(outputFile, false, Encoding.UTF8))
+            {
+                writer.WriteLine("declare namespace Cesium {");
+                writer.WriteLine();
+
+                writer.WriteLine("//type alias");
+                writer.WriteLine("type TypedArray = Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;");
+                writer.WriteLine("type HMDVRDevice = any;");
+                writer.WriteLine("type RenderState = any;");
+                writer.WriteLine("type CanvasPixelArray = Uint8ClampedArray;");
+                writer.WriteLine("type PropertyOrValue<T> = Property<T>|T;");
+
+                foreach (var file in files)
+                {
+                    using (var reader = new StreamReader($"{file}.d.ts"))
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine(reader.ReadToEnd());
+                    };
+                }
+
+                writer.WriteLine("}");
+                writer.WriteLine("export = Cesium;");
+            }
+
+        }
 
         static void FillOptions()
         {
@@ -470,13 +493,13 @@ namespace SInnovations.Cesium.TypescriptGenerator
             var methods = ParseAndWriteMethods(doc, source, classIsInterface);
 
 
-
             if (Char.IsLower(signatureName.First()))
             {
                 var members = ParseAndWriteMembers(doc, true);
                 //WriteDependencies(signatureName, dependencies, writer, methods, members, source);
 
-                writer.WriteLine($"function {signatureName}{signature}{signatureReturnType};");
+                writer.WriteLine($"export function {signatureName}{signature}{signatureReturnType};");
+                //writer.WriteLine($"function {signatureName}{signature}{signatureReturnType};");
                 //writer.WriteLine($"export = {signatureName}");
             }
             else
@@ -488,7 +511,8 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 //WriteDependencies(signatureName, dependencies, writer, methods, members, source);
 
                 var typeDef = classIsInterface ? "interface" : "class";
-
+                if (signatureName == "Property")
+                    signatureName = "Property<T>";
                 //writer.WriteLine($"{typeDef} {signatureName} {extends.part}");
                 writer.WriteLine($"export {typeDef} {signatureName} {extends.part}");
                 writer.WriteLine("{");
@@ -571,7 +595,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
                 var types = TypeReader(member.SelectSingleNode(".//span[@class='type-signature']"));
                 types = extractDependencies(dependencies, types);
 
-                writer.WriteLine($"\t{(staticMember != null && !isInterface ? "static " : "")}{memberName}: {types}");
+                writer.WriteLine($"\t{(staticMember != null && !isInterface ? "static " : "")}{memberName}: {types};");
 
             }
 
@@ -643,8 +667,7 @@ namespace SInnovations.Cesium.TypescriptGenerator
 
                     }))})";
 
-
-                writer.WriteLine($"\t{(staticMember != null && !isInterface ? "static " : "")}{memberName}{signature.Replace("arguments", "args")} : {typeList}");
+                writer.WriteLine($"\t{(staticMember != null && !isInterface ? "static " : "")}{memberName}{signature.Replace("arguments", "args")} : {typeList};");
 
             }
 
